@@ -1,6 +1,14 @@
 import { clerkMiddleware } from '@clerk/nextjs/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
-export default clerkMiddleware();
+export default function proxy(req: NextRequest, event: any) {
+  // If Clerk secret key is not yet configured in Vercel environment variables, bypass gracefully
+  if (!process.env.CLERK_SECRET_KEY) {
+    return NextResponse.next();
+  }
+
+  return clerkMiddleware()(req, event);
+}
 
 export const config = {
   matcher: [

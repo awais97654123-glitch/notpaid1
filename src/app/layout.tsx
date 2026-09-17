@@ -13,6 +13,10 @@ export const metadata: Metadata = {
 
 import { ClerkProvider } from '@clerk/nextjs';
 
+const clerkPublishableKey =
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+  'pk_test_Z2xvd2luZy1kb25rZXktMzA5My5jbGVyay5hY2NvdW50cy5kZXYk';
+
 export default function RootLayout({
   children,
 }: {
@@ -21,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased text-foreground">
-        <ClerkProvider>
+        <ClerkProvider publishableKey={clerkPublishableKey}>
           <Providers>{children}</Providers>
         </ClerkProvider>
       </body>

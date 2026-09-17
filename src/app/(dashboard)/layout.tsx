@@ -3,6 +3,8 @@ import { getAuthenticatedUser, requireWorkspace } from '@/lib/auth/user';
 import { db } from '@/lib/db/repository';
 import { AppShell } from '@/components/layout/app-shell';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardLayout({
   children,
 }: {
