@@ -128,7 +128,7 @@ export function AppShell({
             className={cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all",
               pathname === '/dashboard'
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 font-semibold"
+                ? "nav-active-glow font-semibold"
                 : "text-slate-600 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100"
             )}
           >
@@ -165,7 +165,7 @@ export function AppShell({
             className={cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all",
               pathname.startsWith('/workspaces')
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 font-semibold"
+                ? "nav-active-glow font-semibold"
                 : "text-slate-600 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100"
             )}
           >
@@ -179,7 +179,7 @@ export function AppShell({
             className={cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all",
               pathname.startsWith('/tasks')
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 font-semibold"
+                ? "nav-active-glow font-semibold"
                 : "text-slate-600 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100"
             )}
           >
@@ -193,7 +193,7 @@ export function AppShell({
             className={cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all",
               pathname.startsWith('/settings')
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 font-semibold"
+                ? "nav-active-glow font-semibold"
                 : "text-slate-600 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100"
             )}
           >
@@ -207,14 +207,14 @@ export function AppShell({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 truncate">
               <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-                {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'A'}
+                {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
               </div>
               <div className="truncate">
                 <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
-                  {user?.full_name || 'Alex Morgan'}
+                  {user?.full_name || 'TaskPad User'}
                 </div>
                 <div className="text-[10px] text-slate-400 truncate">
-                  {user?.email || 'alex.morgan@taskpad.app'}
+                  {user?.email || 'user@taskpad.app'}
                 </div>
               </div>
             </div>
@@ -258,7 +258,7 @@ export function AppShell({
           </div>
 
           {/* Right Header Controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <Button
               onClick={() => setCreateTaskOpen(true)}
               size="sm"
@@ -271,13 +271,18 @@ export function AppShell({
             <NotificationCenter />
 
             <Show when="signed-in">
-              <UserButton
-                appearance={{
-                  elements: {
-                    userButtonAvatarBox: 'h-8 w-8 rounded-xl',
-                  },
-                }}
-              />
+              <div className="flex items-center gap-2 pl-2 border-l border-white/60 dark:border-slate-800/60">
+                <span className="hidden sm:inline-block text-xs font-semibold text-slate-800 dark:text-slate-100 max-w-[130px] truncate">
+                  {user?.full_name || 'User'}
+                </span>
+                <UserButton
+                  appearance={{
+                    elements: {
+                      userButtonAvatarBox: 'h-8 w-8 rounded-xl ring-1 ring-white/80 dark:ring-slate-700/80 shadow-xs',
+                    },
+                  }}
+                />
+              </div>
             </Show>
             <Show when="signed-out">
               <div className="flex items-center gap-1.5">

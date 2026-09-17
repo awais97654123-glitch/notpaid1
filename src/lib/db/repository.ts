@@ -1094,6 +1094,19 @@ export const db = {
     }
   },
 
+  async getReminders(workspaceId: string): Promise<Reminder[]> {
+    const list: Reminder[] = [];
+    for (const r of local.reminders.values()) {
+      if (r.workspace_id === workspaceId && r.status !== 'cancelled') {
+        const task = local.tasks.get(r.task_id);
+        list.push({ ...r, task });
+      }
+    }
+    return toPlain(
+      list.sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
+    );
+  },
+
   // In-App Notifications
   async getUserNotifications(userId: string): Promise<NotificationItem[]> {
     const list: NotificationItem[] = [];

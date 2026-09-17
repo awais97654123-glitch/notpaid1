@@ -11,15 +11,17 @@ export default async function DashboardPage() {
   const stats = await db.getProductivityStats(ws.id, user.id);
   const projects = await db.getProjects(ws.id);
   const activityLogs = await db.getActivityLogs(ws.id);
+  const reminders = await db.getReminders(ws.id);
 
   return (
     <DashboardClient
-      userName={user.full_name || 'Alex'}
+      userName={user.full_name || 'User'}
       tasks={tasks}
       notes={notes}
       stats={stats}
       projects={projects}
       activityLogs={activityLogs}
+      reminders={reminders}
     />
   );
 }
