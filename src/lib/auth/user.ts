@@ -5,8 +5,8 @@ import type { User, Workspace } from '@/types';
 export const DEMO_USER: User = {
   id: 'a0000000-0000-0000-0000-000000000001',
   clerk_id: 'user_taskpad_demo_01',
-  email: 'alex.morgan@taskpad.app',
-  full_name: 'Alex Morgan',
+  email: 'malikabubakkar523@gmail.com',
+  full_name: 'Malik Abubakar',
   avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
   timezone: 'UTC',
   locale: 'en',
