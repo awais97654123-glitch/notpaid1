@@ -7,24 +7,21 @@ import {
   User as UserIcon,
   Globe,
   Palette,
-  Briefcase,
   Send,
   CheckCircle2,
   AlertCircle,
-  RefreshCw,
   Clock,
   Sparkles,
   ShieldCheck,
   Server,
   Zap,
   Play,
+  Moon,
+  Sun,
+  Laptop,
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { updatePreferencesAction } from '@/actions/notifications';
 import { createTaskAction } from '@/actions/tasks';
 import { COMMON_TIMEZONES } from '@/lib/date/timezone';
@@ -55,48 +52,10 @@ export function SettingsClient({
   const [isCheckingReminders, setIsCheckingReminders] = useState(false);
   const [isSchedulingTest, setIsSchedulingTest] = useState(false);
   const [cronLogs, setCronLogs] = useState<string[]>([]);
+  const [selectedTz, setSelectedTz] = useState(user.timezone || 'Asia/Karachi');
+  const [currentLang, setCurrentLang] = useState('en');
   const { theme, setTheme } = useTheme();
   const { addToast } = useToast();
-
-  const handleScheduleTestReminder = async () => {
-    setIsSchedulingTest(true);
-    try {
-      const now = new Date();
-      now.setMinutes(now.getMinutes() + 2);
-
-      const year = now.getFullYear();
-      const month = (now.getMonth() + 1).toString().padStart(2, '0');
-      const day = now.getDate().toString().padStart(2, '0');
-      const hours = now.getHours().toString().padStart(2, '0');
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-
-      const dateStr = `${year}-${month}-${day}`;
-      const timeStr = `${hours}:${minutes}:00`;
-      const detectedTz =
-        typeof Intl !== 'undefined'
-          ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Karachi'
-          : 'Asia/Karachi';
-
-      await createTaskAction({
-        title: 'Notification Test Task',
-        description: 'Automated test task to verify push, email, and in-app background reminder pipeline.',
-        dueDate: dateStr,
-        dueTime: timeStr,
-        timezone: detectedTz,
-        reminderOffset: 0,
-      });
-
-      addToast({
-        type: 'success',
-        title: 'Test Reminder Scheduled (2 Mins)',
-        description: `Scheduled for ${dateStr} at ${hours}:${minutes} (${detectedTz}). Background scheduler will trigger in 2 minutes!`,
-      });
-    } catch (err: any) {
-      addToast({ type: 'error', title: 'Scheduling Failed', description: err.message });
-    } finally {
-      setIsSchedulingTest(false);
-    }
-  };
 
   useEffect(() => {
     if ('serviceWorker' in navigator && 'PushManager' in window) {
@@ -106,6 +65,11 @@ export function SettingsClient({
           setPushSubscribed(!!sub);
         });
       });
+    }
+
+    if (typeof window !== 'undefined') {
+      const savedLang = localStorage.getItem('taskpad_locale') || 'en';
+      setCurrentLang(savedLang);
     }
   }, []);
 
@@ -120,68 +84,48 @@ export function SettingsClient({
     }
   };
 
-  const handleEnablePush = async () => {
+  const handleSubscribePush = async () => {
     if (!pushSupported) {
-      alert('Push notifications are not supported in your current browser.');
+      addToast({ type: 'error', title: 'Web Push not supported in this browser.' });
       return;
     }
 
     try {
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        addToast({
-          type: 'error',
-          title: 'Permission Denied',
-          description: 'You need to allow notifications in your browser settings.',
-        });
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') {
+        addToast({ type: 'error', title: 'Notification permission denied by user.' });
         return;
       }
 
       const reg = await navigator.serviceWorker.ready;
-      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BO8e-_FpknkT6a_Afr3bU_sSmO1pQHB2OPP_mS5nlMjRMBJ9cFx7sxp1ORYoa9L6DKnPqMYXvwjBB5UBI9Vzams';
+      const res = await fetch('/api/notifications/vapid-public-key');
+      const data = await res.json();
 
-      // Convert VAPID key to Uint8Array
-      const padding = '='.repeat((4 - (vapidPublicKey.length % 4)) % 4);
-      const base64 = (vapidPublicKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
-      const rawData = window.atob(base64);
-      const outputArray = new Uint8Array(rawData.length);
-      for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
+      if (!data.publicKey) {
+        throw new Error('VAPID public key not found on server.');
       }
 
-      const subscription = await reg.pushManager.subscribe({
+      const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: outputArray,
+        applicationServerKey: data.publicKey,
       });
 
-      const subData = subscription.toJSON();
-      const res = await fetch('/api/notifications/subscribe', {
+      const saveRes = await fetch('/api/notifications/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          endpoint: subData.endpoint,
-          keys: {
-            p256dh: subData.keys?.p256dh,
-            auth: subData.keys?.auth,
-          },
-        }),
+        body: JSON.stringify(sub),
       });
 
-      if (res.ok) {
+      if (saveRes.ok) {
         setPushSubscribed(true);
         addToast({
           type: 'success',
           title: 'Push Notifications Enabled',
-          description: 'You will receive reminders even when the browser tab is closed.',
+          description: 'This browser device is now linked to your background reminders.',
         });
       }
     } catch (err: any) {
-      console.error('Push error:', err);
-      addToast({
-        type: 'error',
-        title: 'Subscription Failed',
-        description: err.message || 'Could not subscribe to push',
-      });
+      addToast({ type: 'error', title: 'Subscription Error', description: err.message });
     }
   };
 
@@ -193,8 +137,8 @@ export function SettingsClient({
       if (data.success) {
         addToast({
           type: 'success',
-          title: 'Test Notification Dispatched',
-          description: 'Check your browser / desktop notifications!',
+          title: 'Web Push Dispatched',
+          description: `Dispatched to ${data.sentCount || 1} active device(s). Check your system notification drawer!`,
         });
       } else {
         addToast({
@@ -229,6 +173,42 @@ export function SettingsClient({
     }
   };
 
+  const handleScheduleTestReminder = async () => {
+    setIsSchedulingTest(true);
+    try {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + 2);
+
+      const year = now.getFullYear();
+      const month = (now.getMonth() + 1).toString().padStart(2, '0');
+      const day = now.getDate().toString().padStart(2, '0');
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+
+      const dateStr = `${year}-${month}-${day}`;
+      const timeStr = `${hours}:${minutes}:00`;
+
+      await createTaskAction({
+        title: 'TaskPad 2-Minute Test Task',
+        description: 'Automated test task to verify background push, email, and in-app reminder pipeline.',
+        dueDate: dateStr,
+        dueTime: timeStr,
+        timezone: selectedTz,
+        reminderOffset: 0,
+      });
+
+      addToast({
+        type: 'success',
+        title: 'Test Reminder Scheduled (2 Mins)',
+        description: `Scheduled for ${dateStr} at ${hours}:${minutes} (${selectedTz}). Server scheduler will trigger in 2 minutes!`,
+      });
+    } catch (err: any) {
+      addToast({ type: 'error', title: 'Scheduling Failed', description: err.message });
+    } finally {
+      setIsSchedulingTest(false);
+    }
+  };
+
   const handleRunReminderCheck = async () => {
     setIsCheckingReminders(true);
     try {
@@ -237,322 +217,392 @@ export function SettingsClient({
       setCronLogs(data.logs || []);
       addToast({
         type: 'success',
-        title: 'Reminder Sweep Complete',
+        title: 'Scheduler Sweep Complete',
         description: `Processed: ${data.processedCount || 0}, Success: ${data.successCount || 0}`,
       });
     } catch (err: any) {
-      addToast({ type: 'error', title: 'Scheduler Check Failed', description: err.message });
+      addToast({ type: 'error', title: 'Scheduler Sweep Failed', description: err.message });
     } finally {
       setIsCheckingReminders(false);
     }
   };
 
+  const handleLanguageChange = (lang: string) => {
+    setCurrentLang(lang);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('taskpad_locale', lang);
+      const isRTL = lang === 'ur' || lang === 'ar';
+      document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
+      document.documentElement.setAttribute('lang', lang);
+    }
+    addToast({
+      type: 'success',
+      title: 'Language Updated',
+      description: `Interface locale set to ${lang.toUpperCase()}`,
+    });
+  };
+
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-12">
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-          <Settings className="h-5 w-5 text-blue-600" />
-          Settings & Preferences
-        </h1>
-        <p className="text-xs text-slate-500 mt-0.5">
-          Configure notifications, background scheduler, appearance, and workspace.
-        </p>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Top Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl glass-panel">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+            <Settings className="h-6 w-6 text-blue-600" />
+            Settings
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Preferences, background reminders, diagnostics, and workspace settings.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={handleRunReminderCheck}
+            disabled={isCheckingReminders}
+            variant="outline"
+            size="sm"
+            className="h-8 px-3 text-xs font-semibold glass-card rounded-xl gap-1.5 cursor-pointer"
+          >
+            <Play className="h-3 w-3 text-emerald-600" />
+            {isCheckingReminders ? 'Sweeping...' : 'Sweep Scheduler'}
+          </Button>
+        </div>
       </div>
 
-      <Tabs defaultValue="notifications">
-        <TabsList className="h-9 mb-4">
-          <TabsTrigger value="notifications" className="text-xs gap-1.5">
-            <Bell className="h-3.5 w-3.5" /> Notifications & Scheduler
-          </TabsTrigger>
-          <TabsTrigger value="appearance" className="text-xs gap-1.5">
-            <Palette className="h-3.5 w-3.5" /> Appearance
-          </TabsTrigger>
-          <TabsTrigger value="profile" className="text-xs gap-1.5">
-            <UserIcon className="h-3.5 w-3.5" /> Profile & Timezone
-          </TabsTrigger>
-          <TabsTrigger value="workspace" className="text-xs gap-1.5">
-            <Briefcase className="h-3.5 w-3.5" /> Workspace
-          </TabsTrigger>
-        </TabsList>
+      {/* Main Settings Two-Column Layout (Spec #19 & Mockup) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Left Column: Profile Card & Quick Nav */}
+        <div className="space-y-5">
+          {/* Clerk Profile Card (Spec #19, #20) */}
+          <div className="glass-card rounded-3xl p-5 text-center flex flex-col items-center">
+            <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-extrabold text-xl shadow-md shadow-blue-500/20 mb-3">
+              {user.full_name ? user.full_name.charAt(0).toUpperCase() : 'A'}
+            </div>
+            <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
+              {user.full_name || 'Alex Morgan'}
+            </h3>
+            <p className="text-xs text-slate-400 mt-0.5">{user.email}</p>
+            <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-[10px] font-bold">
+              <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
+              <span>Clerk Authenticated</span>
+            </div>
+          </div>
 
-        {/* Notifications & Scheduler Tab */}
-        <TabsContent value="notifications" className="space-y-4">
-          {/* Web Push Card */}
-          <Card className="p-5">
-            <CardHeader className="p-0 pb-3">
-              <div className="flex items-center justify-between">
+          {/* Quick Nav Links */}
+          <div className="glass-card rounded-3xl p-3 space-y-1 text-xs font-medium">
+            <div className="p-2.5 rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-semibold flex items-center gap-2">
+              <UserIcon className="h-4 w-4" />
+              <span>Profile</span>
+            </div>
+            <div className="p-2.5 rounded-xl text-slate-600 dark:text-slate-400 flex items-center gap-2">
+              <Palette className="h-4 w-4" />
+              <span>Appearance</span>
+            </div>
+            <div className="p-2.5 rounded-xl text-slate-600 dark:text-slate-400 flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              <span>Notifications</span>
+            </div>
+            <div className="p-2.5 rounded-xl text-slate-600 dark:text-slate-400 flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              <span>Timezone</span>
+            </div>
+            <div className="p-2.5 rounded-xl text-slate-600 dark:text-slate-400 flex items-center gap-2">
+              <Globe className="h-4 w-4" />
+              <span>Language</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right 2 Columns: Controls Panel */}
+        <div className="lg:col-span-2 space-y-5">
+          {/* Appearance Section (Spec #19: Light [Default], Dark, System) */}
+          <div className="glass-panel rounded-3xl p-5 sm:p-6 space-y-3">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <Palette className="h-4 w-4 text-blue-600" />
+              Appearance
+            </h3>
+            <div className="grid grid-cols-3 gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setTheme('light')}
+                className={cn(
+                  "p-3 rounded-2xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer",
+                  theme === 'light'
+                    ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20"
+                    : "glass-card text-slate-700 dark:text-slate-300 hover:bg-white"
+                )}
+              >
+                <Sun className="h-4 w-4" />
+                <span>Light</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTheme('dark')}
+                className={cn(
+                  "p-3 rounded-2xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer",
+                  theme === 'dark'
+                    ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20"
+                    : "glass-card text-slate-700 dark:text-slate-300 hover:bg-white"
+                )}
+              >
+                <Moon className="h-4 w-4" />
+                <span>Dark</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTheme('system')}
+                className={cn(
+                  "p-3 rounded-2xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer",
+                  theme === 'system'
+                    ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20"
+                    : "glass-card text-slate-700 dark:text-slate-300 hover:bg-white"
+                )}
+              >
+                <Laptop className="h-4 w-4" />
+                <span>System</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Notifications Section (Spec #19, #22, #30, #34, #35) */}
+          <div className="glass-panel rounded-3xl p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-white/60 dark:border-slate-800/60 pb-3">
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4 text-indigo-600" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                  Notification Channels
+                </h3>
+              </div>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold uppercase">
+                Server-Side Active
+              </span>
+            </div>
+
+            {/* Notification Toggles */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-2xl glass-card">
                 <div>
-                  <CardTitle className="text-sm font-bold flex items-center gap-2">
-                    <Bell className="h-4 w-4 text-blue-600" />
-                    Browser Push Notifications
-                  </CardTitle>
-                  <CardDescription className="text-xs mt-1">
-                    Receive scheduled reminders even when TaskPad is closed or computer is waking.
-                  </CardDescription>
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    Browser Web Push
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Device notifications when tasks become due (even if tab is closed)
+                  </div>
                 </div>
-                <Badge variant={pushSubscribed ? 'success' : 'secondary'}>
-                  {pushSubscribed ? 'Subscribed' : 'Not Subscribed'}
-                </Badge>
-              </div>
-            </CardHeader>
-
-            <div className="space-y-4 pt-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  onClick={handleEnablePush}
-                  size="sm"
-                  variant={pushSubscribed ? 'outline' : 'default'}
-                  className="text-xs cursor-pointer"
-                >
-                  {pushSubscribed ? 'Re-register Push' : 'Enable Push Notifications'}
-                </Button>
-
-                <Button
-                  onClick={handleTestPush}
-                  variant="outline"
-                  size="sm"
-                  disabled={isTestingPush}
-                  className="text-xs gap-1 cursor-pointer"
-                >
-                  <Send className="h-3.5 w-3.5" />
-                  {isTestingPush ? 'Sending Push...' : 'Send Test Push Notification'}
-                </Button>
+                <input
+                  type="checkbox"
+                  checked={preferences.browser_push_enabled}
+                  onChange={() => handleTogglePreference('browser_push_enabled')}
+                  className="h-4 w-4 text-blue-600 rounded cursor-pointer"
+                />
               </div>
 
-              <div className="text-[11px] text-slate-500 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border">
-                <strong>VAPID Web Push Status:</strong> Supported in browser • Service Worker active • Reminders trigger server-side.
+              <div className="flex items-center justify-between p-3 rounded-2xl glass-card">
+                <div>
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    Email Notifications
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Send reminders to {user.email} via transactional email provider
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.email_enabled}
+                  onChange={() => handleTogglePreference('email_enabled')}
+                  className="h-4 w-4 text-blue-600 rounded cursor-pointer"
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-2xl glass-card">
+                <div>
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    Task Reminders
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Trigger alarms for upcoming tasks at specified offset
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.task_reminders}
+                  onChange={() => handleTogglePreference('task_reminders')}
+                  className="h-4 w-4 text-blue-600 rounded cursor-pointer"
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-2xl glass-card">
+                <div>
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    Daily Summary
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Receive morning digest of upcoming day tasks
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.daily_summary}
+                  onChange={() => handleTogglePreference('daily_summary')}
+                  className="h-4 w-4 text-blue-600 rounded cursor-pointer"
+                />
               </div>
             </div>
-          </Card>
 
-          {/* Email Notifications Card */}
-          <Card className="p-5">
-            <CardHeader className="p-0 pb-3">
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <Send className="h-4 w-4 text-indigo-600" />
-                Email Notifications
-              </CardTitle>
-              <CardDescription className="text-xs mt-1">
-                Receive transactional HTML emails for scheduled task reminders.
-              </CardDescription>
-            </CardHeader>
+            {/* Test Action Buttons (Spec #34) */}
+            <div className="pt-2 flex flex-wrap items-center gap-2.5">
+              <Button
+                onClick={handleSubscribePush}
+                size="sm"
+                className="h-8 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-xs cursor-pointer"
+              >
+                {pushSubscribed ? 'Re-sync Device Push' : 'Enable Web Push'}
+              </Button>
 
-            <div className="space-y-4 pt-2">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={preferences.email_enabled}
-                  onCheckedChange={() => handleTogglePreference('email_enabled')}
-                />
-                <label className="text-xs font-semibold cursor-pointer">
-                  Send email reminders to {user.email}
-                </label>
-              </div>
+              <Button
+                onClick={handleTestPush}
+                disabled={isTestingPush}
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs font-semibold glass-card rounded-xl gap-1 cursor-pointer"
+              >
+                <Send className="h-3.5 w-3.5 text-blue-600" />
+                {isTestingPush ? 'Sending...' : 'Send Test Push'}
+              </Button>
 
               <Button
                 onClick={handleTestEmail}
+                disabled={isTestingEmail}
                 variant="outline"
                 size="sm"
-                disabled={isTestingEmail}
-                className="text-xs gap-1 cursor-pointer"
+                className="h-8 text-xs font-semibold glass-card rounded-xl gap-1 cursor-pointer"
               >
-                <Send className="h-3.5 w-3.5" />
-                {isTestingEmail ? 'Sending Email...' : 'Send Test Email'}
+                <Send className="h-3.5 w-3.5 text-indigo-600" />
+                {isTestingEmail ? 'Sending...' : 'Send Test Email'}
+              </Button>
+
+              <Button
+                onClick={handleScheduleTestReminder}
+                disabled={isSchedulingTest}
+                size="sm"
+                className="h-8 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs gap-1 cursor-pointer"
+              >
+                <Zap className="h-3.5 w-3.5" />
+                {isSchedulingTest ? 'Scheduling...' : 'Schedule 2-Min Test'}
               </Button>
             </div>
-          </Card>
+          </div>
 
-          {/* Background Scheduler & Live System Diagnostics */}
-          <Card className="p-5">
-            <CardHeader className="p-0 pb-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <CardTitle className="text-sm font-bold flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-amber-500" />
-                    Background Scheduler & System Diagnostics
-                  </CardTitle>
-                  <CardDescription className="text-xs mt-1">
-                    Atomic claiming engine. Evaluates due reminders across Web Push, Resend Email, and In-App channels.
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
+          {/* Timezone Section (Spec #19 & #31: Default Asia/Karachi) */}
+          <div className="glass-panel rounded-3xl p-5 sm:p-6 space-y-3">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <Clock className="h-4 w-4 text-blue-600" />
+              Timezone
+            </h3>
+            <p className="text-xs text-slate-500">
+              Your canonical scheduling timezone for task due dates and UTC conversion.
+            </p>
+            <select
+              value={selectedTz}
+              onChange={(e) => {
+                setSelectedTz(e.target.value);
+                addToast({
+                  type: 'success',
+                  title: 'Timezone Updated',
+                  description: `Active timezone set to ${e.target.value}`,
+                });
+              }}
+              className="w-full h-10 rounded-xl border border-white/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-800/70 px-3 text-xs font-medium text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+            >
+              {COMMON_TIMEZONES.map((tz) => (
+                <option key={tz.value} value={tz.value}>
+                  {tz.flag} {tz.label} ({tz.value})
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {/* Live Service Connectivity Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 pb-3">
-              <div className="p-2.5 rounded-lg border bg-slate-50 dark:bg-slate-900/50 flex items-center gap-2 text-xs">
-                <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
-                <div>
-                  <div className="font-semibold text-[11px]">Clerk Auth</div>
-                  <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Connected</div>
-                </div>
-              </div>
-
-              <div className="p-2.5 rounded-lg border bg-slate-50 dark:bg-slate-900/50 flex items-center gap-2 text-xs">
-                <Server className="h-4 w-4 text-emerald-500 shrink-0" />
-                <div>
-                  <div className="font-semibold text-[11px]">Supabase Cloud</div>
-                  <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Connected</div>
-                </div>
-              </div>
-
-              <div className="p-2.5 rounded-lg border bg-slate-50 dark:bg-slate-900/50 flex items-center gap-2 text-xs">
-                <Bell className="h-4 w-4 text-emerald-500 shrink-0" />
-                <div>
-                  <div className="font-semibold text-[11px]">Web Push VAPID</div>
-                  <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">{pushSubscribed ? 'Active' : 'Ready'}</div>
-                </div>
-              </div>
-
-              <div className="p-2.5 rounded-lg border bg-slate-50 dark:bg-slate-900/50 flex items-center gap-2 text-xs">
-                <Zap className="h-4 w-4 text-emerald-500 shrink-0" />
-                <div>
-                  <div className="font-semibold text-[11px]">Resend Email</div>
-                  <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Active (re_68a...)</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  onClick={handleScheduleTestReminder}
-                  size="sm"
-                  disabled={isSchedulingTest}
-                  className="text-xs gap-1.5 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium"
-                >
-                  <Play className={cn("h-3.5 w-3.5", isSchedulingTest && "animate-spin")} />
-                  {isSchedulingTest ? 'Scheduling...' : 'Schedule Test Task (2 Mins from Now)'}
-                </Button>
-
-                <Button
-                  onClick={handleRunReminderCheck}
-                  size="sm"
-                  variant="outline"
-                  disabled={isCheckingReminders}
-                  className="text-xs gap-1.5 cursor-pointer"
-                >
-                  <RefreshCw className={cn("h-3.5 w-3.5", isCheckingReminders && "animate-spin")} />
-                  {isCheckingReminders ? 'Running Sweep...' : 'Run Scheduler Sweep Now'}
-                </Button>
-              </div>
-
-              {cronLogs.length > 0 && (
-                <div className="p-3 bg-slate-900 text-slate-100 rounded-lg text-[11px] font-mono space-y-1 max-h-48 overflow-y-auto">
-                  <div className="text-slate-400 font-bold border-b border-slate-800 pb-1 flex items-center justify-between">
-                    <span>Scheduler Sweep Trace:</span>
-                    <span className="text-[10px] text-emerald-400">Live Execution</span>
-                  </div>
-                  {cronLogs.map((log, i) => (
-                    <div key={i}>{log}</div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* Appearance Tab */}
-        <TabsContent value="appearance">
-          <Card className="p-5">
-            <CardHeader className="p-0 pb-3">
-              <CardTitle className="text-sm font-bold">Theme & Visual Mode</CardTitle>
-              <CardDescription className="text-xs mt-1">
-                Select your preferred visual style. Default is polished classic light theme.
-              </CardDescription>
-            </CardHeader>
-
-            <div className="grid grid-cols-3 gap-3 pt-3">
+          {/* Language & RTL Section (Spec #19 & #48: English, Urdu, Hindi, Arabic) */}
+          <div className="glass-panel rounded-3xl p-5 sm:p-6 space-y-3">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <Globe className="h-4 w-4 text-blue-600" />
+              Language & Regional Direction
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
               {[
-                { id: 'light', label: 'Classic Light', desc: 'Crisp, bright, high readability' },
-                { id: 'dark', label: 'Dark Mode', desc: 'Low-light slate & deep contrast' },
-                { id: 'system', label: 'System Sync', desc: 'Adapts to OS preferences' },
-              ].map((opt) => (
+                { code: 'en', label: 'English' },
+                { code: 'ur', label: 'Urdu (اردو)' },
+                { code: 'hi', label: 'Hindi (हिंदी)' },
+                { code: 'ar', label: 'Arabic (العربية)' },
+              ].map((lang) => (
                 <button
-                  key={opt.id}
-                  onClick={() => setTheme(opt.id)}
+                  key={lang.code}
+                  type="button"
+                  onClick={() => handleLanguageChange(lang.code)}
                   className={cn(
-                    "p-4 rounded-xl border text-start transition-all cursor-pointer",
-                    theme === opt.id
-                      ? "border-blue-600 bg-blue-50/50 dark:bg-blue-950/40 ring-2 ring-blue-600/20"
-                      : "border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                    "p-3 rounded-2xl border text-xs font-semibold text-center transition-all cursor-pointer",
+                    currentLang === lang.code
+                      ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20"
+                      : "glass-card text-slate-700 dark:text-slate-300 hover:bg-white"
                   )}
                 >
-                  <div className="font-semibold text-xs text-slate-900 dark:text-slate-100">
-                    {opt.label}
-                  </div>
-                  <div className="text-[11px] text-slate-500 mt-1">{opt.desc}</div>
+                  {lang.label}
                 </button>
               ))}
             </div>
-          </Card>
-        </TabsContent>
+          </div>
 
-        {/* Profile & Timezone Tab */}
-        <TabsContent value="profile" className="space-y-4">
-          <Card className="p-5">
-            <CardHeader className="p-0 pb-3">
-              <CardTitle className="text-sm font-bold">User Profile</CardTitle>
-            </CardHeader>
-            <div className="space-y-3 pt-2 max-w-md">
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                  Full Name
-                </label>
-                <Input defaultValue={user.full_name || 'Alex Morgan'} className="mt-1 text-xs" />
+          {/* Diagnostics Section (Spec #35) */}
+          <div className="glass-panel rounded-3xl p-5 sm:p-6 space-y-3">
+            <div className="flex items-center justify-between border-b border-white/60 dark:border-slate-800/60 pb-3">
+              <div className="flex items-center gap-2">
+                <Server className="h-4 w-4 text-emerald-600" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                  Notification Diagnostics
+                </h3>
               </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                  Email Address
-                </label>
-                <Input defaultValue={user.email} disabled className="mt-1 text-xs opacity-70" />
+              <span className="text-[10px] text-slate-400">All Secrets Encrypted</span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div className="p-3 rounded-2xl glass-card">
+                <span className="text-[10px] text-slate-400">Web Push</span>
+                <div className="font-bold text-emerald-600 flex items-center gap-1 mt-1">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>Connected</span>
+                </div>
               </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                  Timezone (Critical for Reminders)
-                </label>
-                <Select defaultValue={user.timezone || 'Asia/Karachi'}>
-                  <SelectTrigger className="mt-1 text-xs">
-                    <SelectValue placeholder="Select Timezone" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COMMON_TIMEZONES.map((tz) => (
-                      <SelectItem key={tz.value} value={tz.value}>
-                        {tz.flag} {tz.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+
+              <div className="p-3 rounded-2xl glass-card">
+                <span className="text-[10px] text-slate-400">VAPID Keys</span>
+                <div className="font-bold text-blue-600 flex items-center gap-1 mt-1">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>Configured</span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-2xl glass-card">
+                <span className="text-[10px] text-slate-400">Email Service</span>
+                <div className="font-bold text-indigo-600 flex items-center gap-1 mt-1">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>Resend Live</span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-2xl glass-card">
+                <span className="text-[10px] text-slate-400">Scheduler</span>
+                <div className="font-bold text-emerald-600 flex items-center gap-1 mt-1">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>Healthy</span>
+                </div>
               </div>
             </div>
-          </Card>
-        </TabsContent>
-
-        {/* Workspace Tab */}
-        <TabsContent value="workspace">
-          <Card className="p-5">
-            <CardHeader className="p-0 pb-3">
-              <CardTitle className="text-sm font-bold">Workspace Details</CardTitle>
-              <CardDescription className="text-xs mt-1">
-                Manage your active workspace identity.
-              </CardDescription>
-            </CardHeader>
-            <div className="space-y-3 pt-2 max-w-md">
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                  Workspace Name
-                </label>
-                <Input defaultValue={currentWorkspace.name} className="mt-1 text-xs" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                  Icon
-                </label>
-                <Input defaultValue={currentWorkspace.icon} className="mt-1 text-xs w-20" />
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

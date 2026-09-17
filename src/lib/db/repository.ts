@@ -19,6 +19,7 @@ import type {
   ProductivityStats,
   TaskStatus,
   TaskPriority,
+  ActivityLog,
 } from '@/types';
 
 // ============================================================================
@@ -42,6 +43,7 @@ interface LocalDBState {
   notificationPreferences: Map<string, NotificationPreferences>;
   pushSubscriptions: Map<string, PushSubscriptionRecord>;
   attachments: Map<string, Attachment>;
+  activityLogs: ActivityLog[];
 }
 
 // Global persistent state for development lifecycle across hot reloads
@@ -227,16 +229,80 @@ function initLocalState(): LocalDBState {
   };
   reminders.set(reminder1.id, reminder1);
 
-  // Folders
+  // Canonical Folders matching Spec #8 & Mockup
   const folder1: Folder = {
     id: '20000000-0000-0000-0000-000000000001',
     workspace_id: ws1.id,
-    name: 'Study Notes',
-    icon: '📚',
-    color: '#8B5CF6',
+    name: 'Personal',
+    icon: '🌿',
+    color: '#10B981',
+    created_at: '2026-09-17T00:00:00Z',
+  };
+  const folder2: Folder = {
+    id: '20000000-0000-0000-0000-000000000002',
+    workspace_id: ws1.id,
+    name: 'School',
+    icon: '🎓',
+    color: '#6366F1',
+    created_at: '2026-09-17T00:00:00Z',
+  };
+  const folder3: Folder = {
+    id: '20000000-0000-0000-0000-000000000003',
+    workspace_id: ws1.id,
+    name: 'Projects',
+    icon: '🚀',
+    color: '#3B82F6',
+    created_at: '2026-09-17T00:00:00Z',
+  };
+  const folder4: Folder = {
+    id: '20000000-0000-0000-0000-000000000004',
+    workspace_id: ws1.id,
+    name: 'Ideas',
+    icon: '💡',
+    color: '#F59E0B',
     created_at: '2026-09-17T00:00:00Z',
   };
   folders.set(folder1.id, folder1);
+  folders.set(folder2.id, folder2);
+  folders.set(folder3.id, folder3);
+  folders.set(folder4.id, folder4);
+
+  // Attachments
+  const att1: Attachment = {
+    id: 'att-01',
+    workspace_id: ws1.id,
+    file_name: 'Modern-Physics-Summary.pdf',
+    file_size: 2450000,
+    file_type: 'application/pdf',
+    storage_path: 'workspace/notes/Modern-Physics-Summary.pdf',
+    uploaded_by: demoUser.id,
+    created_at: '2026-09-17T10:00:00Z',
+    url: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80',
+  };
+  const att2: Attachment = {
+    id: 'att-02',
+    workspace_id: ws1.id,
+    file_name: 'Project-Architecture.png',
+    file_size: 1120000,
+    file_type: 'image/png',
+    storage_path: 'workspace/notes/Project-Architecture.png',
+    uploaded_by: demoUser.id,
+    created_at: '2026-09-17T11:00:00Z',
+    url: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=400&q=80',
+  };
+  const att3: Attachment = {
+    id: 'att-03',
+    workspace_id: ws1.id,
+    file_name: 'Course-Syllabus.docx',
+    file_size: 560000,
+    file_type: 'application/msword',
+    storage_path: 'workspace/notes/Course-Syllabus.docx',
+    uploaded_by: demoUser.id,
+    created_at: '2026-09-17T12:00:00Z',
+  };
+  attachments.set(att1.id, att1);
+  attachments.set(att2.id, att2);
+  attachments.set(att3.id, att3);
 
   // Note
   const note1: Note = {
@@ -300,6 +366,36 @@ function initLocalState(): LocalDBState {
   };
   notifications.set(notif1.id, notif1);
 
+  const activityLogs: ActivityLog[] = [
+    {
+      id: 'act-1',
+      workspace_id: ws1.id,
+      user_id: demoUser.id,
+      action: 'Created task "Complete Mathematics Assignment"',
+      entity_type: 'task',
+      entity_id: task1.id,
+      created_at: new Date(Date.now() - 60000).toISOString(),
+    },
+    {
+      id: 'act-2',
+      workspace_id: ws1.id,
+      user_id: demoUser.id,
+      action: 'Saved note "Calculus & Differential Equations Guide"',
+      entity_type: 'note',
+      entity_id: note1.id,
+      created_at: new Date(Date.now() - 300000).toISOString(),
+    },
+    {
+      id: 'act-3',
+      workspace_id: ws1.id,
+      user_id: demoUser.id,
+      action: 'Configured server reminder for 7:30 PM (Asia/Karachi)',
+      entity_type: 'reminder',
+      entity_id: 'rem-1',
+      created_at: new Date(Date.now() - 600000).toISOString(),
+    },
+  ];
+
   return {
     users,
     workspaces,
@@ -316,6 +412,7 @@ function initLocalState(): LocalDBState {
     notificationPreferences,
     pushSubscriptions,
     attachments,
+    activityLogs,
   };
 }
 
@@ -1191,5 +1288,55 @@ export const db = {
       by_project: byProject,
       weekly_trend: weeklyTrend,
     });
+  },
+
+  // Activity Logs (Spec #36)
+  async logActivity(data: {
+    workspace_id: string;
+    user_id: string;
+    action: string;
+    entity_type: string;
+    entity_id: string;
+    metadata?: any;
+  }): Promise<ActivityLog> {
+    const log: ActivityLog = {
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `act-${Date.now()}`,
+      workspace_id: data.workspace_id,
+      user_id: data.user_id,
+      action: data.action,
+      entity_type: data.entity_type,
+      entity_id: data.entity_id,
+      metadata: data.metadata,
+      created_at: new Date().toISOString(),
+    };
+    if (local.activityLogs) {
+      local.activityLogs.unshift(log);
+      if (local.activityLogs.length > 50) local.activityLogs.pop();
+    }
+    const supabase = createAdminClient();
+    if (supabase) {
+      await (supabase as any).from('activity_logs').insert([log]).catch(() => {});
+    }
+    return toPlain(log);
+  },
+
+  async getActivityLogs(workspaceId: string, limit: number = 10): Promise<ActivityLog[]> {
+    const supabase = createAdminClient();
+    if (supabase) {
+      const { data, error } = await (supabase as any)
+        .from('activity_logs')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (!error && data && data.length > 0) {
+        return toPlain(data);
+      }
+    }
+    return toPlain(
+      (local.activityLogs || [])
+        .filter((a) => a.workspace_id === workspaceId || a.workspace_id === 'ws-default')
+        .slice(0, limit)
+    );
   },
 };

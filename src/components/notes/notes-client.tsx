@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   FileText,
   Plus,
@@ -44,6 +45,19 @@ export function NotesClient({ initialNotes, initialFolders }: NotesClientProps) 
   const [search, setSearch] = useState('');
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
   const { addToast } = useToast();
+
+  const searchParams = useSearchParams();
+  const urlNoteId = searchParams.get('id');
+  const urlAction = searchParams.get('action');
+
+  // Handle direct navigation to a note or 'new' action (Spec #4)
+  useEffect(() => {
+    if (urlNoteId) {
+      setActiveNoteId(urlNoteId);
+    } else if (urlAction === 'new') {
+      handleCreateNote();
+    }
+  }, [urlNoteId, urlAction]);
 
   const activeNote = notes.find((n) => n.id === activeNoteId) || null;
 
@@ -131,7 +145,7 @@ export function NotesClient({ initialNotes, initialFolders }: NotesClientProps) 
   };
 
   return (
-    <div className="flex h-full gap-4 max-w-7xl mx-auto overflow-hidden">
+    <div className="flex h-full gap-5 max-w-7xl mx-auto overflow-hidden">
       {/* Version History Modal */}
       {activeNote && (
         <VersionHistoryDialog
@@ -142,19 +156,24 @@ export function NotesClient({ initialNotes, initialFolders }: NotesClientProps) 
         />
       )}
 
-      {/* Left Sidebar: Folders, Filters & Note List */}
-      <div className="w-80 flex flex-col rounded-xl border border-slate-200/80 bg-white/90 dark:border-slate-800/80 dark:bg-slate-900/90 backdrop-blur-md shadow-xs overflow-hidden shrink-0">
+      {/* Left Column: Folders, Filters & Note List */}
+      <div
+        className={cn(
+          "w-80 flex flex-col rounded-2xl glass-panel shadow-sm overflow-hidden shrink-0",
+          activeNoteId ? "hidden md:flex" : "flex w-full md:w-80"
+        )}
+      >
         {/* Header & Quick Add */}
-        <div className="p-3 border-b border-slate-200/80 dark:border-slate-800/80 space-y-2">
+        <div className="p-3.5 border-b border-white/60 dark:border-slate-800/60 space-y-2.5 bg-white/40 dark:bg-slate-900/40">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <FileText className="h-4 w-4 text-emerald-600" />
               Notes
             </h2>
             <Button
               onClick={handleCreateNote}
               size="sm"
-              className="h-7 px-2 text-xs gap-1 cursor-pointer bg-emerald-600 hover:bg-emerald-700"
+              className="h-7 px-2.5 text-xs font-semibold gap-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-xs cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
               New Note
@@ -166,24 +185,24 @@ export function NotesClient({ initialNotes, initialFolders }: NotesClientProps) 
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search note titles & text..."
-              className="h-8 pl-8 text-xs bg-slate-50 dark:bg-slate-800/60"
+              placeholder="Search notes..."
+              className="h-8 pl-8 text-xs bg-white/60 dark:bg-slate-800/60 rounded-xl"
             />
           </div>
         </div>
 
         {/* Filter Tabs & Folders */}
-        <div className="px-3 py-2 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center gap-1 overflow-x-auto text-xs">
+        <div className="px-3 py-2 border-b border-white/60 dark:border-slate-800/60 flex items-center gap-1 overflow-x-auto text-xs">
           <button
             onClick={() => {
               setFilter('all');
               setSelectedFolderId(null);
             }}
             className={cn(
-              "px-2 py-1 rounded-md transition-colors cursor-pointer",
+              "px-2.5 py-1 rounded-lg transition-colors cursor-pointer",
               filter === 'all' && !selectedFolderId
-                ? "bg-slate-200/80 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold"
-                : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                ? "bg-blue-600 text-white font-semibold shadow-2xs"
+                : "text-slate-600 dark:text-slate-400 hover:bg-white/60"
             )}
           >
             All
@@ -191,34 +210,34 @@ export function NotesClient({ initialNotes, initialFolders }: NotesClientProps) 
           <button
             onClick={() => setFilter('favorites')}
             className={cn(
-              "px-2 py-1 rounded-md transition-colors cursor-pointer flex items-center gap-1",
+              "px-2.5 py-1 rounded-lg transition-colors cursor-pointer flex items-center gap-1",
               filter === 'favorites'
-                ? "bg-slate-200/80 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold"
-                : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                ? "bg-blue-600 text-white font-semibold shadow-2xs"
+                : "text-slate-600 dark:text-slate-400 hover:bg-white/60"
             )}
           >
-            <Star className="h-3 w-3 text-amber-500" />
+            <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
             Favorites
           </button>
           <button
             onClick={() => setFilter('pinned')}
             className={cn(
-              "px-2 py-1 rounded-md transition-colors cursor-pointer flex items-center gap-1",
+              "px-2.5 py-1 rounded-lg transition-colors cursor-pointer flex items-center gap-1",
               filter === 'pinned'
-                ? "bg-slate-200/80 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold"
-                : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                ? "bg-blue-600 text-white font-semibold shadow-2xs"
+                : "text-slate-600 dark:text-slate-400 hover:bg-white/60"
             )}
           >
-            <Pin className="h-3 w-3 text-blue-500" />
+            <Pin className="h-3 w-3 text-blue-400" />
             Pinned
           </button>
           <button
             onClick={() => setFilter('trash')}
             className={cn(
-              "px-2 py-1 rounded-md transition-colors cursor-pointer flex items-center gap-1",
+              "px-2.5 py-1 rounded-lg transition-colors cursor-pointer flex items-center gap-1",
               filter === 'trash'
-                ? "bg-slate-200/80 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold"
-                : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                ? "bg-rose-600 text-white font-semibold shadow-2xs"
+                : "text-slate-600 dark:text-slate-400 hover:bg-white/60"
             )}
           >
             <Trash2 className="h-3 w-3 text-rose-500" />
@@ -228,7 +247,7 @@ export function NotesClient({ initialNotes, initialFolders }: NotesClientProps) 
 
         {/* Folders List Bar */}
         {folders.length > 0 && (
-          <div className="px-3 py-2 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center gap-1.5 overflow-x-auto text-xs">
+          <div className="px-3 py-2 border-b border-white/60 dark:border-slate-800/60 flex items-center gap-1.5 overflow-x-auto text-xs">
             <span className="text-[10px] text-slate-400 font-bold uppercase shrink-0">
               Folders:
             </span>
@@ -237,10 +256,10 @@ export function NotesClient({ initialNotes, initialFolders }: NotesClientProps) 
                 key={f.id}
                 onClick={() => setSelectedFolderId(selectedFolderId === f.id ? null : f.id)}
                 className={cn(
-                  "px-2 py-0.5 rounded text-[11px] truncate flex items-center gap-1 transition-colors cursor-pointer shrink-0",
+                  "px-2 py-0.5 rounded-lg text-[11px] truncate flex items-center gap-1 transition-colors cursor-pointer shrink-0",
                   selectedFolderId === f.id
                     ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 font-semibold"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                    : "bg-white/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-white"
                 )}
               >
                 <span>{f.icon || '📁'}</span>
@@ -249,7 +268,7 @@ export function NotesClient({ initialNotes, initialFolders }: NotesClientProps) 
             ))}
             <button
               onClick={handleCreateFolder}
-              className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600"
+              className="p-1 rounded-lg hover:bg-white/60 text-slate-400 hover:text-slate-600 cursor-pointer"
               title="Create new folder"
             >
               <Plus className="h-3 w-3" />
@@ -258,10 +277,10 @@ export function NotesClient({ initialNotes, initialFolders }: NotesClientProps) 
         )}
 
         {/* Notes Items List */}
-        <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+        <div className="flex-1 overflow-y-auto divide-y divide-white/40 dark:divide-slate-800/40">
           {filteredNotes.length === 0 ? (
             <div className="py-16 text-center text-xs text-slate-400 p-4">
-              No notes in this view. Click "New Note" to get started!
+              No notes in this view. Click &quot;New Note&quot; to begin writing.
             </div>
           ) : (
             filteredNotes.map((note) => (
@@ -269,10 +288,10 @@ export function NotesClient({ initialNotes, initialFolders }: NotesClientProps) 
                 key={note.id}
                 onClick={() => setActiveNoteId(note.id)}
                 className={cn(
-                  "p-3 text-start transition-all cursor-pointer group relative",
+                  "p-3.5 text-start transition-all cursor-pointer group relative",
                   activeNoteId === note.id
-                    ? "bg-blue-50/70 dark:bg-blue-950/40 border-l-3 border-blue-600"
-                    : "hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                    ? "bg-blue-50/80 dark:bg-blue-950/40 border-l-4 border-blue-600 shadow-2xs"
+                    : "hover:bg-white/60 dark:hover:bg-slate-800/50"
                 )}
               >
                 <div className="flex items-center justify-between gap-1">
@@ -280,14 +299,14 @@ export function NotesClient({ initialNotes, initialFolders }: NotesClientProps) 
                     className={cn(
                       "font-semibold text-xs truncate flex-1",
                       activeNoteId === note.id
-                        ? "text-blue-950 dark:text-blue-100"
+                        ? "text-blue-950 dark:text-blue-100 font-bold"
                         : "text-slate-800 dark:text-slate-200"
                     )}
                   >
                     {note.title || 'Untitled Note'}
                   </span>
 
-                  <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100">
+                  <div className="flex items-center gap-1 opacity-70 group-hover:opacity-100">
                     <button
                       onClick={(e) => handleTogglePin(note, e)}
                       className={cn("p-0.5 cursor-pointer", note.is_pinned && "text-blue-600")}
@@ -320,64 +339,26 @@ export function NotesClient({ initialNotes, initialFolders }: NotesClientProps) 
       </div>
 
       {/* Right Main Document Area: Tiptap Editor */}
-      <div className="flex-1 flex flex-col h-full min-w-0">
+      <div
+        className={cn(
+          "flex-1 flex flex-col h-full min-w-0",
+          !activeNoteId ? "hidden md:flex" : "flex"
+        )}
+      >
         {activeNote ? (
-          <div className="flex-1 flex flex-col h-full">
-            {/* Note Actions Top Bar */}
-            <div className="flex items-center justify-between mb-2 px-1">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => handleToggleFavorite(activeNote, e)}
-                  className={cn("h-7 px-2 text-xs gap-1", activeNote.is_favorite && "text-amber-500")}
-                >
-                  <Star className="h-3.5 w-3.5" />
-                  {activeNote.is_favorite ? 'Favorited' : 'Favorite'}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => handleTogglePin(activeNote, e)}
-                  className={cn("h-7 px-2 text-xs gap-1", activeNote.is_pinned && "text-blue-600")}
-                >
-                  <Pin className="h-3.5 w-3.5" />
-                  {activeNote.is_pinned ? 'Pinned' : 'Pin'}
-                </Button>
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setVersionHistoryOpen(true)}
-                  className="h-7 px-2 text-xs gap-1"
-                >
-                  <History className="h-3.5 w-3.5" />
-                  Version History
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDeleteNote(activeNote.id)}
-                  className="h-7 px-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </div>
-
-            <NoteEditor
-              key={activeNote.id}
-              note={activeNote}
-              onOpenVersions={() => setVersionHistoryOpen(true)}
-              className="flex-1"
-            />
-          </div>
+          <NoteEditor
+            key={activeNote.id}
+            note={activeNote}
+            onOpenVersions={() => setVersionHistoryOpen(true)}
+            onBack={() => setActiveNoteId(null)}
+            onDelete={() => handleDeleteNote(activeNote.id)}
+            className="flex-1"
+          />
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center border border-dashed rounded-xl border-slate-200 dark:border-slate-800 text-slate-400 text-xs">
-            <FileText className="h-10 w-10 text-slate-300 dark:text-slate-700 mb-2" />
-            <p>Select a note from the left sidebar or click "New Note" to begin writing.</p>
+          <div className="flex-1 flex flex-col items-center justify-center rounded-2xl glass-panel text-slate-400 text-xs p-6 text-center">
+            <FileText className="h-10 w-10 text-slate-300 dark:text-slate-600 mb-2" />
+            <p className="font-semibold text-slate-600 dark:text-slate-300">No Note Selected</p>
+            <p className="mt-1">Select a note from the left or click &quot;New Note&quot; to write.</p>
           </div>
         )}
       </div>

@@ -10,6 +10,7 @@ export default async function DashboardPage() {
   const notes = await db.getNotes({ workspaceId: ws.id, isTrash: false });
   const stats = await db.getProductivityStats(ws.id, user.id);
   const projects = await db.getProjects(ws.id);
+  const activityLogs = await db.getActivityLogs(ws.id);
 
   return (
     <DashboardClient
@@ -18,6 +19,7 @@ export default async function DashboardPage() {
       notes={notes}
       stats={stats}
       projects={projects}
+      activityLogs={activityLogs}
     />
   );
 }

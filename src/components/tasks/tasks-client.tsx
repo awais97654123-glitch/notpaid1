@@ -3,32 +3,24 @@
 import React, { useState } from 'react';
 import {
   CheckSquare,
-  Columns,
-  List as ListIcon,
   Plus,
   Search,
-  Filter,
-  ArrowUpDown,
   Calendar,
   Clock,
-  MoreVertical,
-  Trash2,
-  Copy,
-  Folder,
+  Bell,
   Sparkles,
+  AlertCircle,
+  CheckCircle2,
+  Trash2,
+  FolderKanban,
+  Repeat,
+  ChevronRight,
+  ListTodo,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
-import { TaskKanban } from '@/components/tasks/task-kanban';
 import { TaskDetailDialog } from '@/components/tasks/task-detail-dialog';
 import { CreateTaskDialog } from '@/components/tasks/create-task-dialog';
 import {
@@ -47,34 +39,80 @@ interface TasksClientProps {
 
 export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [viewMode, setViewMode] = useState<'list' | 'board'>('list');
-  const [filter, setFilter] = useState<'all' | 'today' | 'upcoming' | 'overdue' | 'completed'>('all');
-  const [priorityFilter, setPriorityFilter] = useState<string>('all');
-  const [projectFilter, setProjectFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
-  const [quickAddText, setQuickAddText] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [createTaskOpen, setCreateTaskOpen] = useState(false);
+  const [createTaskModalOpen, setCreateTaskModalOpen] = useState(false);
+
+  // New Task Generator State (Spec #12 & #13)
+  const [genTitle, setGenTitle] = useState('Complete Mathematics Assignment');
+  const [genDate, setGenDate] = useState('2026-09-20');
+  const [genTime, setGenTime] = useState('19:30');
+  const [genPriority, setGenPriority] = useState<TaskPriority>('high');
+  const [genReminder, setGenReminder] = useState<number>(0); // 0 = at time
+  const [genSubtasks, setGenSubtasks] = useState<string>('Research, Write, Review, Submit');
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const { addToast } = useToast();
 
   const todayStr = new Date().toISOString().split('T')[0];
 
-  // Filter & Search
-  const filteredTasks = tasks.filter((t) => {
-    if (filter === 'today' && t.due_date !== todayStr) return false;
-    if (filter === 'upcoming' && (!t.due_date || t.due_date <= todayStr || t.status === 'completed')) return false;
-    if (filter === 'overdue' && (!t.due_date || t.due_date >= todayStr || t.status === 'completed')) return false;
-    if (filter === 'completed' && t.status !== 'completed') return false;
+  // Smart sections
+  const recentTasks = [...tasks].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 
-    if (priorityFilter !== 'all' && t.priority !== priorityFilter) return false;
-    if (projectFilter !== 'all' && t.project_id !== projectFilter) return false;
+  const todayTasks = tasks.filter((t) => t.due_date === todayStr);
+  const upcomingTasks = tasks.filter(
+    (t) => t.due_date && t.due_date > todayStr && t.status !== 'completed'
+  );
+  const overdueTasks = tasks.filter(
+    (t) => t.due_date && t.due_date < todayStr && t.status !== 'completed'
+  );
 
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      return t.title.toLowerCase().includes(q) || t.description.toLowerCase().includes(q);
+  // Handle Generator Submit (Spec #13: Date 20 Sept, Time 7:30 PM, Reminder At time -> Stores in Supabase + Reminder)
+  const handleGeneratorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!genTitle.trim()) return;
+
+    setIsGenerating(true);
+    try {
+      const detectedTz =
+        typeof Intl !== 'undefined'
+          ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Karachi'
+          : 'Asia/Karachi';
+
+      const subtaskTitles = genSubtasks
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const created = await createTaskAction({
+        title: genTitle.trim(),
+        description: 'Created via Liquid Glass Task Generator with automated server background reminder.',
+        dueDate: genDate,
+        dueTime: genTime.length === 5 ? `${genTime}:00` : genTime,
+        timezone: detectedTz,
+        priority: genPriority,
+        reminderOffset: genReminder,
+        subtasks: subtaskTitles,
+      });
+
+      setTasks((prev) => [created, ...prev]);
+      addToast({
+        type: 'success',
+        title: 'Task & Reminder Created',
+        description: `"${created.title}" scheduled for ${genDate} at ${genTime} (${detectedTz}).`,
+      });
+
+      // Clear/reset title for next task
+      setGenTitle('');
+    } catch (err: any) {
+      addToast({ type: 'error', title: 'Task Creation Failed', description: err.message });
+    } finally {
+      setIsGenerating(false);
     }
-    return true;
-  });
+  };
 
   const handleToggleComplete = async (taskId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -93,70 +131,20 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
     }
   };
 
-  const handleDeleteTask = async (taskId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!confirm('Are you sure you want to delete this task?')) return;
-    try {
-      await deleteTaskAction(taskId);
-      setTasks((prev) => prev.filter((t) => t.id !== taskId));
-      addToast({ type: 'info', title: 'Task Deleted' });
-    } catch (err: any) {
-      addToast({ type: 'error', title: 'Delete Failed', description: err.message });
+  const filteredRecentTasks = recentTasks.filter((t) => {
+    if (priorityFilter !== 'all' && t.priority !== priorityFilter) return false;
+    if (search.trim()) {
+      return (
+        t.title.toLowerCase().includes(search.toLowerCase()) ||
+        t.description.toLowerCase().includes(search.toLowerCase())
+      );
     }
-  };
-
-  const handleQuickAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!quickAddText.trim()) return;
-
-    let title = quickAddText.trim();
-    let dueDate: string | null = null;
-    let dueTime: string | null = '19:30:00';
-    let priority: TaskPriority = 'medium';
-
-    const lower = title.toLowerCase();
-    const today = new Date();
-    if (lower.includes('tomorrow')) {
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      dueDate = tomorrow.toISOString().split('T')[0];
-    } else if (lower.includes('today')) {
-      dueDate = today.toISOString().split('T')[0];
-    }
-
-    if (lower.includes('p:urgent') || lower.includes('urgent')) priority = 'urgent';
-    else if (lower.includes('p:high')) priority = 'high';
-
-    try {
-      const created = await createTaskAction({
-        title,
-        dueDate,
-        dueTime,
-        priority,
-      });
-
-      setTasks((prev) => [created, ...prev]);
-      setQuickAddText('');
-      addToast({
-        type: 'success',
-        title: 'Task Added',
-        description: `"${created.title}" scheduled.`,
-      });
-    } catch (err: any) {
-      addToast({ type: 'error', title: 'Quick Add Error', description: err.message });
-    }
-  };
-
-  const counts = {
-    all: tasks.length,
-    today: tasks.filter((t) => t.due_date === todayStr).length,
-    upcoming: tasks.filter((t) => t.due_date && t.due_date > todayStr && t.status !== 'completed').length,
-    overdue: tasks.filter((t) => t.due_date && t.due_date < todayStr && t.status !== 'completed').length,
-    completed: tasks.filter((t) => t.status === 'completed').length,
-  };
+    return true;
+  });
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Dialogs */}
       <TaskDetailDialog
         task={selectedTask}
         isOpen={!!selectedTask}
@@ -164,109 +152,41 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
         onTaskUpdated={() => window.location.reload()}
       />
       <CreateTaskDialog
-        isOpen={createTaskOpen}
-        onClose={() => setCreateTaskOpen(false)}
+        isOpen={createTaskModalOpen}
+        onClose={() => setCreateTaskModalOpen(false)}
         projects={projects}
         onTaskCreated={() => window.location.reload()}
       />
 
-      {/* Top Header & View Mode Switcher */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* Top Header Bar (Spec #12: Tasks, Search, Filter, Sort, New Task) */}
+      <div className="flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl glass-panel">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <CheckSquare className="h-5 w-5 text-blue-600" />
-            My Tasks
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+            <CheckSquare className="h-6 w-6 text-blue-600" />
+            Tasks
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Organize, prioritize, and track tasks with checklists and reminders.
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Real-time scheduled task pipeline with server reminders.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'list' | 'board')}>
-            <TabsList className="h-8">
-              <TabsTrigger value="list" className="text-xs h-7 gap-1 cursor-pointer">
-                <ListIcon className="h-3.5 w-3.5" />
-                List
-              </TabsTrigger>
-              <TabsTrigger value="board" className="text-xs h-7 gap-1 cursor-pointer">
-                <Columns className="h-3.5 w-3.5" />
-                Board
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Search */}
+          <div className="relative">
+            <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-2.5" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search tasks..."
+              className="h-8 pl-8 pr-3 text-xs w-44 bg-white/60 dark:bg-slate-800/60 rounded-xl"
+            />
+          </div>
 
-          <Button
-            onClick={() => setCreateTaskOpen(true)}
-            size="sm"
-            className="h-8 text-xs gap-1 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            New Task
-          </Button>
-        </div>
-      </div>
-
-      {/* Quick Add Bar */}
-      <form onSubmit={handleQuickAdd} className="relative">
-        <Input
-          value={quickAddText}
-          onChange={(e) => setQuickAddText(e.target.value)}
-          placeholder="Quick add: e.g. Finish chemistry lab report tomorrow at 7:30 PM p:High (Press Enter)"
-          className="h-10 pl-9 pr-24 text-xs sm:text-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-xs"
-        />
-        <Sparkles className="h-4 w-4 text-blue-500 absolute left-3 top-3 pointer-events-none" />
-        <Button
-          type="submit"
-          size="sm"
-          className="absolute right-1.5 top-1.5 h-7 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white"
-          disabled={!quickAddText.trim()}
-        >
-          Add
-        </Button>
-      </form>
-
-      {/* Filter and Search Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-xl border border-slate-200/80 bg-white/70 dark:border-slate-800/80 dark:bg-slate-900/70 backdrop-blur-md">
-        {/* Smart Filter Pills */}
-        <div className="flex flex-wrap items-center gap-1">
-          {(['all', 'today', 'upcoming', 'overdue', 'completed'] as const).map((f) => {
-            const count = counts[f];
-            return (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-xs font-medium capitalize transition-colors cursor-pointer flex items-center gap-1.5",
-                  filter === f
-                    ? "bg-blue-600 text-white shadow-2xs font-semibold"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                )}
-              >
-                <span>{f}</span>
-                {count > 0 && (
-                  <span
-                    className={cn(
-                      "text-[10px] px-1.5 py-0.2 rounded-full font-bold",
-                      filter === f
-                        ? "bg-white/20 text-white"
-                        : "bg-slate-200/80 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
-                    )}
-                  >
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Priority, Project & Search */}
-        <div className="flex flex-wrap items-center gap-2">
+          {/* Priority filter */}
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
-            className="h-7 text-xs rounded-md border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-2 text-slate-700 dark:text-slate-300 outline-none"
+            className="h-8 text-xs rounded-xl border border-white/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 px-2.5 text-slate-700 dark:text-slate-300 outline-none cursor-pointer"
           >
             <option value="all">All Priorities</option>
             <option value="urgent">Urgent</option>
@@ -275,169 +195,341 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
             <option value="low">Low</option>
           </select>
 
-          {projects.length > 0 && (
-            <select
-              value={projectFilter}
-              onChange={(e) => setProjectFilter(e.target.value)}
-              className="h-7 text-xs rounded-md border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-2 text-slate-700 dark:text-slate-300 outline-none max-w-[130px] truncate"
-            >
-              <option value="all">All Projects</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          )}
-
-          <div className="relative">
-            <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2 top-2" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search tasks..."
-              className="h-7 pl-7 w-28 sm:w-40 text-xs"
-            />
-          </div>
+          <Button
+            onClick={() => setCreateTaskModalOpen(true)}
+            size="sm"
+            className="h-8 px-3.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-xs gap-1.5 cursor-pointer"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            New Task
+          </Button>
         </div>
       </div>
 
-      {/* Main View Display: List or Kanban */}
-      {viewMode === 'board' ? (
-        <TaskKanban
-          tasks={filteredTasks}
-          onSelectTask={(t) => setSelectedTask(t)}
-          onTasksChanged={() => window.location.reload()}
-        />
-      ) : (
-        <div className="rounded-xl border border-slate-200/80 bg-white/90 dark:border-slate-800/80 dark:bg-slate-900/90 backdrop-blur-md shadow-xs overflow-hidden">
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {filteredTasks.length === 0 ? (
-              <div className="py-16 text-center text-xs text-slate-400">
-                No tasks match your current filter. Click New Task to create one!
+      {/* Top Split Section: Recent Tasks (Left) & New Task Generator (Right) (Spec #12, #13 & Mockup) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Left: Recent Tasks */}
+        <div className="glass-panel rounded-3xl p-5 sm:p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4 border-b border-white/60 dark:border-slate-800/60 pb-3">
+              <div className="flex items-center gap-2">
+                <ListTodo className="h-4 w-4 text-blue-600" />
+                <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                  Recent Tasks
+                </h2>
               </div>
-            ) : (
-              filteredTasks.map((task) => {
-                const completedSubtasks = task.subtasks?.filter((s) => s.is_completed).length || 0;
-                const totalSubtasks = task.subtasks?.length || 0;
-                const subtaskPercent = totalSubtasks > 0 ? Math.round((completedSubtasks / totalSubtasks) * 100) : 0;
-                const isOverdue = task.due_date && task.due_date < todayStr && task.status !== 'completed';
+              <span className="text-xs text-slate-400 font-medium">
+                {filteredRecentTasks.length} recorded
+              </span>
+            </div>
 
-                const borderPriorityClass =
-                  task.priority === 'urgent'
-                    ? 'border-l-4 border-l-rose-500'
-                    : task.priority === 'high'
-                    ? 'border-l-4 border-l-amber-500'
-                    : task.priority === 'medium'
-                    ? 'border-l-4 border-l-blue-500'
-                    : 'border-l-4 border-l-slate-300 dark:border-l-slate-700';
-
-                return (
-                  <div
-                    key={task.id}
-                    onClick={() => setSelectedTask(task)}
-                    className={cn(
-                      "flex flex-col sm:flex-row sm:items-center justify-between p-3.5 hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group gap-2 sm:gap-4",
-                      borderPriorityClass
-                    )}
-                  >
-                    <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
-                      <div
-                        onClick={(e) => handleToggleComplete(task.id, e)}
-                        className="cursor-pointer shrink-0 mt-0.5 sm:mt-0"
-                      >
-                        <Checkbox checked={task.status === 'completed'} />
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span
-                            className={cn(
-                              "text-xs sm:text-sm font-medium truncate",
-                              task.status === 'completed'
-                                ? "line-through text-slate-400 dark:text-slate-500"
-                                : "text-slate-900 dark:text-slate-100 group-hover:text-blue-600"
-                            )}
-                          >
-                            {task.title}
-                          </span>
-
-                          {isOverdue && (
-                            <span className="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
-                              Overdue
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-400 mt-1">
-                          {task.due_date && (
-                            <span className={cn(
-                              "flex items-center gap-1 font-medium",
-                              isOverdue ? "text-rose-600 font-semibold" : "text-slate-600 dark:text-slate-300"
-                            )}>
-                              <Calendar className="h-3 w-3 text-slate-400" />
-                              {task.due_date}
-                              {task.due_time && ` at ${task.due_time}`}
-                            </span>
-                          )}
-
-                          {totalSubtasks > 0 && (
-                            <div className="flex items-center gap-1.5">
-                              <span className="flex items-center gap-1 text-slate-500">
-                                <CheckSquare className="h-3 w-3 text-slate-400" />
-                                {completedSubtasks}/{totalSubtasks} ({subtaskPercent}%)
-                              </span>
-                              <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-blue-600 rounded-full"
-                                  style={{ width: `${subtaskPercent}%` }}
-                                />
-                              </div>
-                            </div>
-                          )}
-
-                          {task.project && (
-                            <span className="flex items-center gap-1 text-slate-500">
-                              <Folder className="h-3 w-3 text-slate-400" />
-                              {task.project.name}
-                            </span>
-                          )}
-                        </div>
-                      </div>
+            <div className="space-y-2.5">
+              {filteredRecentTasks.slice(0, 5).map((task) => (
+                <div
+                  key={task.id}
+                  onClick={() => setSelectedTask(task)}
+                  className="flex items-center justify-between p-3 rounded-2xl glass-card hover:border-blue-400 transition-all cursor-pointer group shadow-2xs"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div onClick={(e) => handleToggleComplete(task.id, e)} className="cursor-pointer">
+                      <Checkbox checked={task.status === 'completed'} />
                     </div>
-
-                    <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-1 sm:pt-0">
-                      <Badge variant={task.priority as any} className="text-[10px] uppercase font-semibold tracking-wider">
-                        {task.priority}
-                      </Badge>
-
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer">
-                            <MoreVertical className="h-3.5 w-3.5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="text-xs">
-                          <DropdownMenuItem onClick={() => setSelectedTask(task)}>
-                            Edit Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => handleDeleteTask(task.id, e as any)}
-                            className="text-rose-600 dark:text-rose-400 cursor-pointer"
-                          >
-                            <Trash2 className="h-3.5 w-3.5 mr-1" />
-                            Delete Task
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    <div className="truncate">
+                      <div
+                        className={cn(
+                          "text-xs sm:text-sm font-semibold truncate",
+                          task.status === 'completed'
+                            ? "line-through text-slate-400"
+                            : "text-slate-900 dark:text-slate-100 group-hover:text-blue-600"
+                        )}
+                      >
+                        {task.title}
+                      </div>
+                      <div className="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5">
+                        {task.due_date && <span>{task.due_date}</span>}
+                        {task.due_time && <span>at {task.due_time}</span>}
+                        {task.subtasks && task.subtasks.length > 0 && (
+                          <span>
+                            • {task.subtasks.filter((s) => s.is_completed).length}/{task.subtasks.length} subtasks
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                );
-              })
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span
+                      className={cn(
+                        "text-[9px] px-2 py-0.5 rounded-full font-bold uppercase",
+                        task.priority === 'urgent' && "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300",
+                        task.priority === 'high' && "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300",
+                        task.priority === 'medium' && "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300",
+                        task.priority === 'low' && "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                      )}
+                    >
+                      {task.priority}
+                    </span>
+                  </div>
+                </div>
+              ))}
+
+              {filteredRecentTasks.length === 0 && (
+                <div className="py-12 text-center text-xs text-slate-400 border border-dashed rounded-2xl border-slate-200 dark:border-slate-800">
+                  No tasks matching query.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="pt-4 mt-3 border-t border-white/60 dark:border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
+            <span>Click any item to view details & subtasks</span>
+            <span className="text-blue-600 font-semibold">Ready</span>
+          </div>
+        </div>
+
+        {/* Right: New Task Generator (Spec #12 & #13 & Mockup) */}
+        <div className="glass-panel rounded-3xl p-5 sm:p-6 flex flex-col justify-between">
+          <form onSubmit={handleGeneratorSubmit} className="space-y-4">
+            <div className="flex items-center justify-between border-b border-white/60 dark:border-slate-800/60 pb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-indigo-600" />
+                <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                  New Task Generator
+                </h2>
+              </div>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold uppercase">
+                Instant Scheduler
+              </span>
+            </div>
+
+            {/* Task Title */}
+            <div>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Task Title
+              </label>
+              <Input
+                value={genTitle}
+                onChange={(e) => setGenTitle(e.target.value)}
+                placeholder="e.g. Complete Mathematics Assignment"
+                className="mt-1 h-9 rounded-xl bg-white/70 dark:bg-slate-800/70 text-xs font-medium"
+                required
+              />
+            </div>
+
+            {/* Date & Time Row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                  <Calendar className="h-3 w-3 text-blue-600" />
+                  Due Date
+                </label>
+                <Input
+                  type="date"
+                  value={genDate}
+                  onChange={(e) => setGenDate(e.target.value)}
+                  className="mt-1 h-9 rounded-xl bg-white/70 dark:bg-slate-800/70 text-xs cursor-pointer"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                  <Clock className="h-3 w-3 text-blue-600" />
+                  Due Time
+                </label>
+                <Input
+                  type="time"
+                  value={genTime}
+                  onChange={(e) => setGenTime(e.target.value)}
+                  className="mt-1 h-9 rounded-xl bg-white/70 dark:bg-slate-800/70 text-xs cursor-pointer"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Priority & Reminder */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Priority
+                </label>
+                <select
+                  value={genPriority}
+                  onChange={(e) => setGenPriority(e.target.value as TaskPriority)}
+                  className="mt-1 h-9 w-full rounded-xl border border-white/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-800/70 px-2.5 text-xs text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+                >
+                  <option value="urgent">Urgent</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                  <Bell className="h-3 w-3 text-indigo-600" />
+                  Reminder
+                </label>
+                <select
+                  value={genReminder}
+                  onChange={(e) => setGenReminder(Number(e.target.value))}
+                  className="mt-1 h-9 w-full rounded-xl border border-white/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-800/70 px-2.5 text-xs text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+                >
+                  <option value="0">At time of task</option>
+                  <option value="15">15 minutes before</option>
+                  <option value="60">1 hour before</option>
+                  <option value="1440">1 day before</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Subtasks (Spec #17) */}
+            <div>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Checklist Subtasks (comma separated)
+              </label>
+              <Input
+                value={genSubtasks}
+                onChange={(e) => setGenSubtasks(e.target.value)}
+                placeholder="Research, Write, Review, Submit"
+                className="mt-1 h-9 rounded-xl bg-white/70 dark:bg-slate-800/70 text-xs"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              disabled={isGenerating || !genTitle.trim()}
+              className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md shadow-blue-500/20 font-bold text-xs gap-1.5 cursor-pointer"
+            >
+              {isGenerating ? 'Scheduling Task...' : 'New Task'}
+            </Button>
+          </form>
+        </div>
+      </div>
+
+      {/* Bottom Section: Today's Tasks, Upcoming, Overdue (Spec #15 & Mockup) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* Today's Tasks */}
+        <div className="glass-panel rounded-3xl p-5 space-y-3">
+          <div className="flex items-center justify-between border-b border-white/60 dark:border-slate-800/60 pb-2.5">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-blue-600" />
+              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                Today&apos;s Tasks
+              </h3>
+            </div>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold">
+              {todayTasks.length}
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            {todayTasks.map((t) => (
+              <div
+                key={t.id}
+                onClick={() => setSelectedTask(t)}
+                className="glass-card rounded-2xl p-3 cursor-pointer hover:border-blue-400 transition-all shadow-2xs"
+              >
+                <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate">
+                  {t.title}
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-slate-400 mt-2">
+                  <span>{t.due_time || 'Today'}</span>
+                  <Badge variant="outline" className="text-[9px] uppercase">
+                    Today
+                  </Badge>
+                </div>
+              </div>
+            ))}
+            {todayTasks.length === 0 && (
+              <div className="py-8 text-center text-xs text-slate-400 border border-dashed rounded-2xl border-slate-200 dark:border-slate-800">
+                No tasks due today.
+              </div>
             )}
           </div>
         </div>
-      )}
+
+        {/* Upcoming */}
+        <div className="glass-panel rounded-3xl p-5 space-y-3">
+          <div className="flex items-center justify-between border-b border-white/60 dark:border-slate-800/60 pb-2.5">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-indigo-600" />
+              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                Upcoming
+              </h3>
+            </div>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold">
+              {upcomingTasks.length}
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            {upcomingTasks.slice(0, 4).map((t) => (
+              <div
+                key={t.id}
+                onClick={() => setSelectedTask(t)}
+                className="glass-card rounded-2xl p-3 cursor-pointer hover:border-blue-400 transition-all shadow-2xs"
+              >
+                <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate">
+                  {t.title}
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-slate-400 mt-2">
+                  <span>{t.due_date}</span>
+                  <Badge variant="outline" className="text-[9px] text-indigo-600">
+                    Upcoming
+                  </Badge>
+                </div>
+              </div>
+            ))}
+            {upcomingTasks.length === 0 && (
+              <div className="py-8 text-center text-xs text-slate-400 border border-dashed rounded-2xl border-slate-200 dark:border-slate-800">
+                No upcoming tasks scheduled.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Overdue */}
+        <div className="glass-panel rounded-3xl p-5 space-y-3">
+          <div className="flex items-center justify-between border-b border-white/60 dark:border-slate-800/60 pb-2.5">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-rose-600" />
+              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                Overdue
+              </h3>
+            </div>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-bold">
+              {overdueTasks.length}
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            {overdueTasks.map((t) => (
+              <div
+                key={t.id}
+                onClick={() => setSelectedTask(t)}
+                className="glass-card rounded-2xl p-3 cursor-pointer border-rose-200 dark:border-rose-900/60 hover:border-rose-400 transition-all shadow-2xs"
+              >
+                <div className="font-semibold text-xs text-rose-900 dark:text-rose-200 truncate">
+                  {t.title}
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-rose-500 mt-2">
+                  <span>Due {t.due_date}</span>
+                  <Badge variant="destructive" className="text-[9px]">
+                    Overdue
+                  </Badge>
+                </div>
+              </div>
+            ))}
+            {overdueTasks.length === 0 && (
+              <div className="py-8 text-center text-xs text-emerald-600 dark:text-emerald-400 border border-dashed rounded-2xl border-emerald-200 dark:border-emerald-900/40">
+                Zero overdue tasks! Great work.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
