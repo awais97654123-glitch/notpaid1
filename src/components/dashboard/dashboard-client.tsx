@@ -149,9 +149,12 @@ export function DashboardClient({
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400">
             <Sparkles className="h-4 w-4" />
-            <span>{currentDateFormatted}</span>
+            <span suppressHydrationWarning>{currentDateFormatted}</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mt-1">
+          <h1
+            className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mt-1"
+            suppressHydrationWarning
+          >
             {greeting}, {userName}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
@@ -544,7 +547,7 @@ export function DashboardClient({
                     </div>
                     <div className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1.5">
                       <Clock className="h-2.5 w-2.5" />
-                      <span>{new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span suppressHydrationWarning>{new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                   </div>
                 </div>
@@ -588,7 +591,7 @@ export function DashboardClient({
                     {rem.task?.title || 'Scheduled Task Alert'}
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1.5">
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1" suppressHydrationWarning>
                       <Clock className="h-3 w-3 text-indigo-500" />
                       {new Date(rem.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({rem.timezone || 'UTC'})
                     </span>
