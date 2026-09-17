@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server';
+import { calculateCanonicalScheduledUtc, resolveUserTimezone } from '@/lib/date/timezone';
 import type {
   User,
   Workspace,
@@ -212,10 +213,16 @@ function initLocalState(): LocalDBState {
     task_id: task1.id,
     user_id: demoUser.id,
     workspace_id: ws1.id,
-    scheduled_at: '2026-09-20T19:30:00.000Z',
+    scheduled_at: '2026-09-20T14:30:00.000Z', // 7:30 PM PKT in canonical UTC
+    timezone: 'Asia/Karachi',
     status: 'pending',
+    push_status: 'pending',
+    email_status: 'pending',
+    in_app_status: 'pending',
+    attempts: 0,
     retry_count: 0,
     created_at: '2026-09-17T12:00:00Z',
+    updated_at: '2026-09-17T12:00:00Z',
     task: task1,
   };
   reminders.set(reminder1.id, reminder1);
@@ -569,7 +576,7 @@ export const db = {
       priority: data.priority || 'medium',
       due_date: data.due_date || null,
       due_time: data.due_time || null,
-      timezone: data.timezone || 'UTC',
+      timezone: resolveUserTimezone(data.timezone),
       reminder_offset: data.reminder_offset ?? 0,
       recurrence_rule: data.recurrence_rule || null,
       created_by: data.created_by || null,
@@ -581,15 +588,21 @@ export const db = {
 
     local.tasks.set(id, task);
 
-    // If due_date and time are provided, automatically register a reminder
-    if (task.due_date && data.created_by) {
-      const timeStr = task.due_time || '09:00:00';
-      const scheduledAt = new Date(`${task.due_date}T${timeStr}Z`).toISOString();
+    // If due_date is provided and user is known, calculate canonical UTC and register reminder
+    if (task.due_date && data.created_by && task.status !== 'completed') {
+      const scheduledAtUtc = calculateCanonicalScheduledUtc(
+        task.due_date,
+        task.due_time,
+        task.timezone,
+        task.reminder_offset
+      );
+
       await this.createReminder({
         task_id: task.id,
         user_id: data.created_by,
         workspace_id: task.workspace_id,
-        scheduled_at: scheduledAt,
+        scheduled_at: scheduledAtUtc,
+        timezone: task.timezone,
       });
     }
 
@@ -607,18 +620,69 @@ export const db = {
         ? null
         : task.completed_at;
 
-    const updated = {
+    const updated: Task = {
       ...task,
       ...updates,
       completed_at,
       updated_at: new Date().toISOString(),
     };
     local.tasks.set(id, updated);
+
+    // Synchronize reminder lifecycle on task updates
+    if (updates.status === 'completed') {
+      // Completing a task cancels pending reminders
+      await this.cancelTaskReminders(id);
+    } else if (
+      updates.due_date !== undefined ||
+      updates.due_time !== undefined ||
+      updates.timezone !== undefined ||
+      updates.reminder_offset !== undefined ||
+      (updates.status !== undefined && task.status === 'completed')
+    ) {
+      if (updated.due_date && updated.created_by) {
+        const userTz = resolveUserTimezone(updated.timezone);
+        const scheduledAtUtc = calculateCanonicalScheduledUtc(
+          updated.due_date,
+          updated.due_time,
+          userTz,
+          updated.reminder_offset ?? 0
+        );
+
+        // Find existing reminder
+        const existingReminder = Array.from(local.reminders.values()).find(
+          (r) => r.task_id === id && (r.status === 'pending' || r.status === 'cancelled' || r.status === 'processing')
+        );
+
+        if (existingReminder) {
+          existingReminder.scheduled_at = scheduledAtUtc;
+          existingReminder.timezone = userTz;
+          existingReminder.status = 'pending';
+          existingReminder.push_status = 'pending';
+          existingReminder.email_status = 'pending';
+          existingReminder.in_app_status = 'pending';
+          existingReminder.attempts = 0;
+          existingReminder.retry_count = 0;
+          existingReminder.updated_at = new Date().toISOString();
+        } else {
+          await this.createReminder({
+            task_id: updated.id,
+            user_id: updated.created_by,
+            workspace_id: updated.workspace_id,
+            scheduled_at: scheduledAtUtc,
+            timezone: userTz,
+          });
+        }
+      } else if (!updated.due_date) {
+        await this.cancelTaskReminders(id);
+      }
+    }
+
     return toPlain(this.getTaskById(id));
   },
 
   async deleteTask(id: string): Promise<boolean> {
     local.subtasks.delete(id);
+    await this.cancelTaskReminders(id);
     return local.tasks.delete(id);
   },
 
@@ -627,6 +691,15 @@ export const db = {
     if (!task) return null;
     const newStatus: TaskStatus = task.status === 'completed' ? 'todo' : 'completed';
     return this.updateTask(id, { status: newStatus });
+  },
+
+  async cancelTaskReminders(taskId: string): Promise<void> {
+    for (const rem of local.reminders.values()) {
+      if (rem.task_id === taskId && (rem.status === 'pending' || rem.status === 'processing')) {
+        rem.status = 'cancelled';
+        rem.updated_at = new Date().toISOString();
+      }
+    }
   },
 
   // Subtasks
@@ -803,29 +876,46 @@ export const db = {
     user_id: string;
     workspace_id: string;
     scheduled_at: string;
+    timezone?: string;
   }): Promise<Reminder> {
+    // Cancel any existing pending/processing reminders for this task before registering new one
+    await this.cancelTaskReminders(data.task_id);
+
     const id = `rem_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const now = new Date().toISOString();
     const reminder: Reminder = {
       id,
       task_id: data.task_id,
       user_id: data.user_id,
       workspace_id: data.workspace_id,
       scheduled_at: data.scheduled_at,
+      timezone: data.timezone || 'Asia/Karachi',
       status: 'pending',
+      push_status: 'pending',
+      email_status: 'pending',
+      in_app_status: 'pending',
+      attempts: 0,
       retry_count: 0,
-      created_at: new Date().toISOString(),
+      created_at: now,
+      updated_at: now,
     };
     local.reminders.set(id, reminder);
     return reminder;
   },
 
   async getDueReminders(): Promise<Reminder[]> {
-    const now = new Date().getTime();
+    const nowTime = Date.now();
     const due: Reminder[] = [];
     for (const rem of local.reminders.values()) {
-      if (rem.status === 'pending' && new Date(rem.scheduled_at).getTime() <= now) {
+      if (rem.status === 'pending' && new Date(rem.scheduled_at).getTime() <= nowTime) {
         const task = local.tasks.get(rem.task_id);
-        due.push({ ...rem, task });
+        // Only deliver if task exists and is not completed
+        if (task && task.status !== 'completed') {
+          due.push({ ...rem, task });
+        } else if (!task || task.status === 'completed') {
+          rem.status = 'cancelled';
+          rem.updated_at = new Date().toISOString();
+        }
       }
     }
     return due;
@@ -837,23 +927,73 @@ export const db = {
     rem.status = 'processing';
     rem.locked_at = new Date().toISOString();
     rem.locked_by = workerId;
+    rem.updated_at = rem.locked_at;
     return true;
+  },
+
+  async recordReminderDelivery(
+    id: string,
+    results: {
+      push_status: 'sent' | 'failed' | 'skipped';
+      email_status: 'sent' | 'failed' | 'skipped';
+      in_app_status: 'sent' | 'failed' | 'skipped';
+      error_message?: string | null;
+    }
+  ): Promise<void> {
+    const rem = local.reminders.get(id);
+    if (!rem) return;
+
+    const now = new Date().toISOString();
+    rem.attempts = (rem.attempts || 0) + 1;
+    rem.retry_count = rem.attempts;
+    rem.last_attempt_at = now;
+    rem.push_status = results.push_status;
+    rem.email_status = results.email_status;
+    rem.in_app_status = results.in_app_status;
+    rem.updated_at = now;
+
+    const anySent =
+      results.push_status === 'sent' ||
+      results.email_status === 'sent' ||
+      results.in_app_status === 'sent';
+
+    if (anySent) {
+      rem.status = 'sent';
+      rem.sent_at = now;
+      rem.delivered_at = now;
+      rem.error_message = results.error_message || null;
+    } else {
+      if (rem.attempts >= 3) {
+        rem.status = 'failed';
+        rem.error_message = results.error_message || 'Max retry attempts reached';
+      } else {
+        // Return to pending for retry
+        rem.status = 'pending';
+        rem.error_message = results.error_message || 'Temporary delivery failure';
+      }
+    }
   },
 
   async markReminderSent(id: string): Promise<void> {
     const rem = local.reminders.get(id);
     if (rem) {
+      const now = new Date().toISOString();
       rem.status = 'sent';
-      rem.delivered_at = new Date().toISOString();
+      rem.sent_at = now;
+      rem.delivered_at = now;
+      rem.updated_at = now;
     }
   },
 
   async markReminderFailed(id: string, error: string): Promise<void> {
     const rem = local.reminders.get(id);
     if (rem) {
-      rem.retry_count++;
-      rem.status = rem.retry_count >= 3 ? 'failed' : 'pending';
+      const now = new Date().toISOString();
+      rem.attempts = (rem.attempts || 0) + 1;
+      rem.retry_count = rem.attempts;
+      rem.status = rem.attempts >= 3 ? 'failed' : 'pending';
       rem.error_message = error;
+      rem.updated_at = now;
     }
   },
 

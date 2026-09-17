@@ -158,14 +158,22 @@ export interface Reminder {
   task_id: string;
   user_id: string;
   workspace_id: string;
-  scheduled_at: string;
+  scheduled_at: string; // Canonical UTC ISO timestamp
+  timezone: string;
   status: ReminderStatus;
+  push_status?: 'pending' | 'sent' | 'failed' | 'skipped';
+  email_status?: 'pending' | 'sent' | 'failed' | 'skipped';
+  in_app_status?: 'pending' | 'sent' | 'failed' | 'skipped';
   locked_at?: string | null;
   locked_by?: string | null;
   delivered_at?: string | null;
+  sent_at?: string | null;
   retry_count: number;
+  attempts: number;
+  last_attempt_at?: string | null;
   error_message?: string | null;
   created_at: string;
+  updated_at?: string;
   task?: Task;
 }
 

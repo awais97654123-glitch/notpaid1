@@ -15,7 +15,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createTaskAction } from '@/actions/tasks';
 import { useToast } from '@/components/ui/toast';
-import { Calendar, Clock, Bell, Plus, X, Sparkles, CheckSquare } from 'lucide-react';
+import { Calendar, Clock, Bell, Plus, X, Sparkles, CheckSquare, Globe } from 'lucide-react';
+import { COMMON_TIMEZONES, resolveUserTimezone } from '@/lib/date/timezone';
 import type { Project, TaskPriority } from '@/types';
 
 interface CreateTaskDialogProps {
@@ -40,6 +41,16 @@ export function CreateTaskDialog({
   const [dueTime, setDueTime] = useState<string>('19:30');
   const [projectId, setProjectId] = useState<string>('');
   const [reminderOffset, setReminderOffset] = useState<number>(0);
+  const [timezone, setTimezone] = useState<string>(() => {
+    if (typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
+      try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Karachi';
+      } catch {
+        return 'Asia/Karachi';
+      }
+    }
+    return 'Asia/Karachi';
+  });
   const [subtasks, setSubtasks] = useState<string[]>([]);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -107,12 +118,14 @@ export function CreateTaskDialog({
 
     setIsSubmitting(true);
     try {
+      const normalizedTime = dueTime ? (dueTime.length === 5 ? `${dueTime}:00` : dueTime) : null;
       await createTaskAction({
         title: title.trim(),
         description: description.trim(),
         priority,
         dueDate: dueDate || null,
-        dueTime: dueTime ? `${dueTime}:00` : null,
+        dueTime: normalizedTime,
+        timezone,
         projectId: projectId || null,
         reminderOffset,
         subtasks: subtasks.length > 0 ? subtasks : undefined,
@@ -120,8 +133,8 @@ export function CreateTaskDialog({
 
       addToast({
         type: 'success',
-        title: 'Task Created',
-        description: `"${title.trim()}" has been scheduled with reminders.`,
+        title: 'Task Created & Scheduled',
+        description: `"${title.trim()}" reminder set for ${dueDate || 'today'} at ${dueTime} (${timezone}).`,
       });
 
       // Reset form
@@ -267,6 +280,7 @@ export function CreateTaskDialog({
                 <SelectContent>
                   <SelectItem value="0">At time of task</SelectItem>
                   <SelectItem value="5">5 minutes before</SelectItem>
+                  <SelectItem value="10">10 minutes before</SelectItem>
                   <SelectItem value="15">15 minutes before</SelectItem>
                   <SelectItem value="30">30 minutes before</SelectItem>
                   <SelectItem value="60">1 hour before</SelectItem>
@@ -274,6 +288,26 @@ export function CreateTaskDialog({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* Timezone Row */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+              <Globe className="h-3.5 w-3.5 text-slate-400" />
+              Scheduling Timezone
+            </label>
+            <Select value={timezone} onValueChange={(val) => setTimezone(val)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select timezone" />
+              </SelectTrigger>
+              <SelectContent>
+                {COMMON_TIMEZONES.map((tz) => (
+                  <SelectItem key={tz.value} value={tz.value}>
+                    {tz.flag} {tz.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Subtasks Checklist Builder */}

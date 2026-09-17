@@ -15,13 +15,26 @@ export interface PushPayload {
   title: string;
   body: string;
   url?: string;
+  badge?: string;
+  tag?: string;
+}
+
+export interface PushResult {
+  success: boolean;
+  isExpired?: boolean;
+  statusCode?: number;
+  error?: string;
 }
 
 export async function sendWebPush(
   sub: { endpoint: string; p256dh: string; auth: string },
   payload: PushPayload
-): Promise<{ success: boolean; error?: string }> {
+): Promise<PushResult> {
   try {
+    if (!sub.endpoint || !sub.p256dh || !sub.auth) {
+      return { success: false, error: 'Invalid push subscription keys' };
+    }
+
     const pushSubscription = {
       endpoint: sub.endpoint,
       keys: {
@@ -30,10 +43,23 @@ export async function sendWebPush(
       },
     };
 
-    await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
-    return { success: true };
+    const response = await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
+    return { success: true, statusCode: response.statusCode };
   } catch (error: any) {
-    console.error('WebPush notification delivery error:', error);
-    return { success: false, error: error?.message || 'Failed to send web push' };
+    const statusCode = error.statusCode || error.status;
+    const isExpired = statusCode === 404 || statusCode === 410;
+
+    if (isExpired) {
+      console.warn(`[WebPush] Subscription expired or unsubscribed (${statusCode}): ${sub.endpoint}`);
+    } else {
+      console.error('[WebPush Delivery Error]:', error.message || error);
+    }
+
+    return {
+      success: false,
+      isExpired,
+      statusCode,
+      error: error?.message || 'Failed to send web push',
+    };
   }
 }

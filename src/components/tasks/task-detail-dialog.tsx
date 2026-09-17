@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   updateTaskAction,
   deleteTaskAction,
@@ -53,6 +54,9 @@ export function TaskDetailDialog({
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(task?.title || '');
   const [description, setDescription] = useState(task?.description || '');
+  const [dueDate, setDueDate] = useState<string>(task?.due_date || '');
+  const [dueTime, setDueTime] = useState<string>(task?.due_time || '');
+  const [reminderOffset, setReminderOffset] = useState<number>(task?.reminder_offset ?? 0);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [subtasks, setSubtasks] = useState<Subtask[]>(task?.subtasks || []);
   const { addToast } = useToast();
@@ -61,6 +65,9 @@ export function TaskDetailDialog({
     if (task) {
       setTitle(task.title);
       setDescription(task.description);
+      setDueDate(task.due_date || '');
+      setDueTime(task.due_time || '');
+      setReminderOffset(task.reminder_offset ?? 0);
       setSubtasks(task.subtasks || []);
       setIsEditing(false);
     }
@@ -135,9 +142,15 @@ export function TaskDetailDialog({
 
   const handleSaveEdits = async () => {
     try {
-      await updateTaskAction(task.id, { title, description });
+      await updateTaskAction(task.id, {
+        title,
+        description,
+        due_date: dueDate || null,
+        due_time: dueTime ? (dueTime.length === 5 ? `${dueTime}:00` : dueTime) : null,
+        reminder_offset: reminderOffset,
+      });
       setIsEditing(false);
-      addToast({ type: 'success', title: 'Task Updated', description: 'Changes saved successfully.' });
+      addToast({ type: 'success', title: 'Task Updated & Rescheduled', description: 'Changes saved and reminders updated.' });
       if (onTaskUpdated) onTaskUpdated();
     } catch (err: any) {
       addToast({ type: 'error', title: 'Update Failed', description: err.message });
@@ -162,29 +175,59 @@ export function TaskDetailDialog({
               )}
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsEditing(!isEditing)}
-                className="h-8 px-2 text-xs"
+                className="h-8 px-2.5 text-xs gap-1.5"
               >
-                <Edit2 className="h-3.5 w-3.5 mr-1" />
-                {isEditing ? 'Cancel Edit' : 'Edit'}
+                {isEditing ? (
+                  <>
+                    <X className="h-3.5 w-3.5" />
+                    Cancel
+                  </>
+                ) : (
+                  <>
+                    <Edit2 className="h-3.5 w-3.5" />
+                    Edit
+                  </>
+                )}
               </Button>
+
+              {isEditing && (
+                <Button
+                  size="sm"
+                  onClick={handleSaveEdits}
+                  className="h-8 px-2.5 text-xs bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
+                >
+                  <Save className="h-3.5 w-3.5" />
+                  Save
+                </Button>
+              )}
+
+              <Button
+                variant={task.status === 'completed' ? 'outline' : 'default'}
+                size="sm"
+                onClick={handleToggleComplete}
+                className="h-8 px-2.5 text-xs gap-1.5"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                {task.status === 'completed' ? 'Reopen' : 'Complete'}
+              </Button>
+
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleDelete}
-                className="h-8 px-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50"
               >
-                <Trash2 className="h-3.5 w-3.5 mr-1" />
-                Delete
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </div>
 
-          <DialogTitle className="mt-2 text-xl font-bold text-slate-900 dark:text-slate-100">
+          <div className="mt-3">
             {isEditing ? (
               <Input
                 value={title}
@@ -192,44 +235,89 @@ export function TaskDetailDialog({
                 className="text-lg font-bold"
               />
             ) : (
-              task.title
+              <DialogTitle className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                {task.title}
+              </DialogTitle>
             )}
-          </DialogTitle>
+          </div>
         </DialogHeader>
 
         <div className="space-y-4 py-2 text-sm text-slate-700 dark:text-slate-300">
           {/* Schedule Metadata Card */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 text-xs">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-blue-600" />
+          {isEditing ? (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/80 dark:border-blue-900/50 text-xs">
               <div>
-                <span className="text-slate-400 block">Due Date</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">
-                  {task.due_date || 'No due date'}
-                </span>
+                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">Due Date</label>
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  className="w-full rounded border p-1 text-xs bg-white dark:bg-slate-900"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">Due Time</label>
+                <input
+                  type="time"
+                  value={dueTime}
+                  onChange={(e) => setDueTime(e.target.value)}
+                  className="w-full rounded border p-1 text-xs bg-white dark:bg-slate-900"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">Reminder</label>
+                <Select
+                  value={reminderOffset.toString()}
+                  onValueChange={(val) => setReminderOffset(parseInt(val, 10))}
+                >
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue placeholder="Reminder" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">At time of task</SelectItem>
+                    <SelectItem value="5">5m before</SelectItem>
+                    <SelectItem value="10">10m before</SelectItem>
+                    <SelectItem value="15">15m before</SelectItem>
+                    <SelectItem value="30">30m before</SelectItem>
+                    <SelectItem value="60">1h before</SelectItem>
+                    <SelectItem value="1440">1d before</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 text-xs">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-blue-600" />
+                <div>
+                  <span className="text-slate-400 block">Due Date</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {task.due_date || 'No due date'}
+                  </span>
+                </div>
+              </div>
 
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-blue-600" />
-              <div>
-                <span className="text-slate-400 block">Time</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">
-                  {task.due_time || 'No time set'}
-                </span>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-blue-600" />
+                <div>
+                  <span className="text-slate-400 block">Time</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {task.due_time || 'No time set'}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-2">
-              <Bell className="h-4 w-4 text-blue-600" />
-              <div>
-                <span className="text-slate-400 block">Reminder</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">
-                  {task.reminder_offset === 0 ? 'At time of task' : `${task.reminder_offset}m before`}
-                </span>
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4 text-blue-600" />
+                <div>
+                  <span className="text-slate-400 block">Reminder</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {task.reminder_offset === 0 ? 'At time of task' : `${task.reminder_offset}m before`}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Description */}
           <div>

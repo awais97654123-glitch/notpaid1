@@ -56,7 +56,7 @@ export async function createTaskAction(data: {
     priority: data.priority || 'medium',
     due_date: data.dueDate,
     due_time: data.dueTime,
-    timezone: data.timezone || user.timezone || 'UTC',
+    timezone: data.timezone || user.timezone || 'Asia/Karachi',
     reminder_offset: data.reminderOffset ?? 0,
     created_by: user.id,
     subtasks: data.subtasks,

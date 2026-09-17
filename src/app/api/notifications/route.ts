@@ -1,12 +1,21 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/repository';
 import { getAuthenticatedUser } from '@/lib/auth/user';
+import { processDueReminders } from '@/lib/scheduler/engine';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
     const user = await getAuthenticatedUser();
+
+    // Trigger sweep for any overdue reminders upon active user interaction
+    try {
+      await processDueReminders(`active_user_${user.id.substring(0, 8)}`);
+    } catch (e) {
+      console.warn('[Notifications Poll Reminder Sweep Notice]:', e);
+    }
+
     const notifications = await db.getUserNotifications(user.id);
     const unreadCount = await db.getUnreadNotificationCount(user.id);
     return NextResponse.json({ notifications, unreadCount });

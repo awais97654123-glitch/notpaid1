@@ -7,6 +7,7 @@ export interface TaskEmailPayload {
   description?: string;
   dueDate?: string | null;
   dueTime?: string | null;
+  timezone?: string;
   priority?: string;
   projectName?: string;
   taskId: string;
@@ -57,7 +58,7 @@ export async function sendTaskReminderEmail(payload: TaskEmailPayload): Promise<
         <h2 class="task-title">${payload.taskTitle}</h2>
         ${payload.description ? `<p style="margin: 0 0 8px 0; font-size: 14px; color: #475569;">${payload.description}</p>` : ''}
         <div class="task-meta">
-          <strong>Due:</strong> ${payload.dueDate || 'Today'} ${payload.dueTime ? `at ${payload.dueTime}` : ''}
+          <strong>Due:</strong> ${payload.dueDate || 'Today'} ${payload.dueTime ? `at ${payload.dueTime}` : ''} ${payload.timezone ? `(${payload.timezone})` : ''}
         </div>
         ${payload.projectName ? `<div class="task-meta"><strong>Project:</strong> ${payload.projectName}</div>` : ''}
       </div>
