@@ -14,6 +14,9 @@ try {
 export interface PushPayload {
   title: string;
   body: string;
+  taskTitle?: string;
+  taskId?: string;
+  reminderTime?: string;
   url?: string;
   badge?: string;
   tag?: string;

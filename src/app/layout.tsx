@@ -6,9 +6,23 @@ export const metadata: Metadata = {
   title: 'TaskPad — Note & Task Management SaaS',
   description: 'Production-ready full-stack productivity workspace combining advanced notepad, task management, calendar, and scheduled background reminders.',
   manifest: '/manifest.json',
-  icons: {
-    icon: '/favicon.ico',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'TaskPad',
   },
+  icons: {
+    icon: '/icon-192.png',
+    shortcut: '/icon-192.png',
+    apple: '/apple-touch-icon.png',
+  },
+};
+
+export const viewport = {
+  themeColor: '#2563eb',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 import { ClerkProvider } from '@clerk/nextjs';

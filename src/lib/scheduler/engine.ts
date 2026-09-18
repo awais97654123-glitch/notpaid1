@@ -112,7 +112,10 @@ export async function processDueReminders(workerId: string = 'cron_worker'): Pro
               { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
               {
                 title: 'TaskPad Reminder',
-                body: `${task.title} — due now.`,
+                taskTitle: task.title,
+                taskId: task.id,
+                reminderTime: `${task.due_date || 'Today'}${task.due_time ? ' at ' + task.due_time : ''}`,
+                body: `${task.title} — due at ${task.due_time || 'now'} (${reminder.timezone}).`,
                 url: `/tasks?id=${task.id}`,
               }
             );
@@ -122,12 +125,17 @@ export async function processDueReminders(workerId: string = 'cron_worker'): Pro
             } else if (pushRes.isExpired) {
               // Delete expired/unsubscribed browser endpoint
               await db.deletePushSubscription(sub.endpoint);
-              logs.push(`[WebPush] Removed expired subscription for endpoint: ${sub.endpoint.slice(0, 30)}...`);
+              logs.push(`[WebPush] Cleaned up expired push subscription for endpoint: ${sub.endpoint.slice(0, 30)}...`);
             } else if (pushRes.error) {
               channelErrors.push(`Push: ${pushRes.error}`);
             }
           }
           pushStatus = pushSent ? 'sent' : 'failed';
+          db.recordPushTelemetry({
+            success: pushSent,
+            error: channelErrors.join(' | '),
+            taskTitle: task.title,
+          });
           logs.push(`[WebPush] Dispatched push for task "${task.title}": ${pushStatus}`);
         } else {
           pushStatus = 'skipped';
@@ -190,6 +198,15 @@ export async function processDueReminders(workerId: string = 'cron_worker'): Pro
   }
 
   logs.push(`[${new Date().toISOString()}] Scheduler run completed. Total: ${processedCount}, Success: ${successCount}, Failed: ${failedCount}, Skipped: ${skippedCount}`);
+
+  db.recordSchedulerTelemetry({
+    workerId,
+    processedCount,
+    successCount,
+    failedCount,
+    skippedCount,
+    logs,
+  });
 
   return {
     processedCount,
