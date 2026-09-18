@@ -1015,21 +1015,24 @@ export const db = {
 
     const supabase = createAdminClient();
     if (supabase) {
-      await (supabase as any)
-        .from('reminders')
-        .insert([{
-          task_id: data.task_id,
-          user_id: data.user_id,
-          workspace_id: data.workspace_id,
-          scheduled_at: data.scheduled_at,
-          timezone: data.timezone || 'Asia/Karachi',
-          status: 'pending',
-          push_status: 'pending',
-          email_status: 'pending',
-          in_app_status: 'pending',
-          attempts: 0,
-        }])
-        .catch((e: any) => console.debug('Supabase reminder insert notice:', e?.message));
+      try {
+        await (supabase as any)
+          .from('reminders')
+          .insert([{
+            task_id: data.task_id,
+            user_id: data.user_id,
+            workspace_id: data.workspace_id,
+            scheduled_at: data.scheduled_at,
+            timezone: data.timezone || 'Asia/Karachi',
+            status: 'pending',
+            push_status: 'pending',
+            email_status: 'pending',
+            in_app_status: 'pending',
+            attempts: 0,
+          }]);
+      } catch (e: any) {
+        console.debug('Supabase reminder insert notice:', e?.message);
+      }
     }
 
     return reminder;
@@ -1224,20 +1227,23 @@ export const db = {
 
     const supabase = createAdminClient();
     if (supabase) {
-      await (supabase as any)
-        .from('push_subscriptions')
-        .upsert(
-          {
-            user_id: userId,
-            endpoint: sub.endpoint,
-            p256dh: sub.p256dh,
-            auth: sub.auth,
-            user_agent: userAgent,
-            updated_at: now,
-          },
-          { onConflict: 'user_id,endpoint' }
-        )
-        .catch((e: any) => console.debug('Supabase push_subscriptions upsert notice:', e?.message));
+      try {
+        await (supabase as any)
+          .from('push_subscriptions')
+          .upsert(
+            {
+              user_id: userId,
+              endpoint: sub.endpoint,
+              p256dh: sub.p256dh,
+              auth: sub.auth,
+              user_agent: userAgent,
+              updated_at: now,
+            },
+            { onConflict: 'user_id,endpoint' }
+          );
+      } catch (e: any) {
+        console.debug('Supabase push_subscriptions upsert notice:', e?.message);
+      }
     }
 
     return record;
@@ -1267,11 +1273,12 @@ export const db = {
   async deletePushSubscription(endpoint: string): Promise<boolean> {
     const supabase = createAdminClient();
     if (supabase) {
-      await (supabase as any)
-        .from('push_subscriptions')
-        .delete()
-        .eq('endpoint', endpoint)
-        .catch(() => {});
+      try {
+        await (supabase as any)
+          .from('push_subscriptions')
+          .delete()
+          .eq('endpoint', endpoint);
+      } catch (_) {}
     }
     return local.pushSubscriptions.delete(endpoint);
   },
@@ -1472,7 +1479,9 @@ export const db = {
     }
     const supabase = createAdminClient();
     if (supabase) {
-      await (supabase as any).from('activity_logs').insert([log]).catch(() => {});
+      try {
+        await (supabase as any).from('activity_logs').insert([log]);
+      } catch (_) {}
     }
     return toPlain(log);
   },
