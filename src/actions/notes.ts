@@ -40,6 +40,19 @@ export async function createNoteAction(data?: {
   const user = await getAuthenticatedUser();
   const ws = await requireWorkspace(user.id, data?.workspaceId);
 
+  // Subscription plan limit enforcement:
+  // malikabubakkar523@gmail.com has unlimited lifetime access.
+  // Free accounts are limited to 2 notes.
+  const isUnlimitedAdmin = user.email?.toLowerCase() === 'malikabubakkar523@gmail.com';
+  if (!isUnlimitedAdmin) {
+    const existingNotes = await db.getNotes({ workspaceId: ws.id });
+    if (existingNotes.length >= 2) {
+      throw new Error(
+        'PLAN_LIMIT_REACHED: Free tier is limited to 2 notes. Upgrade to Pro for unlimited notes.'
+      );
+    }
+  }
+
   const note = await db.createNote({
     workspace_id: ws.id,
     folder_id: data?.folderId,

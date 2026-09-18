@@ -47,6 +47,19 @@ export async function createTaskAction(data: {
     throw new Error('Task title cannot be empty');
   }
 
+  // Subscription plan limit enforcement:
+  // malikabubakkar523@gmail.com has unlimited lifetime access.
+  // Free accounts are limited to 4 tasks.
+  const isUnlimitedAdmin = user.email?.toLowerCase() === 'malikabubakkar523@gmail.com';
+  if (!isUnlimitedAdmin) {
+    const existingTasks = await db.getTasks({ workspaceId: ws.id });
+    if (existingTasks.length >= 4) {
+      throw new Error(
+        'PLAN_LIMIT_REACHED: Free tier is limited to 4 tasks. Upgrade to Pro for unlimited tasks.'
+      );
+    }
+  }
+
   const task = await db.createTask({
     workspace_id: ws.id,
     project_id: data.projectId,

@@ -4,290 +4,308 @@ import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import { auth } from '@clerk/nextjs/server';
 import {
-  Sparkles,
+  Play,
   ArrowRight,
-  FileText,
-  CheckSquare,
-  Bell,
-  FolderKanban,
+  CheckCircle2,
+  Sparkles,
   ShieldCheck,
   Zap,
-  Globe,
+  Star,
+  FileText,
   Clock,
-  Laptop,
-  CheckCircle2,
+  Layers,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export const metadata = {
-  title: 'TaskPad — Modern Liquid Glass Productivity Platform',
+  title: 'TaskPad — Your Ideas, Tasks & Workspace All in One Place',
   description:
-    'Experience fluid note taking, structured workspace folders, task management, and true background server reminders.',
+    'A modern productivity app to help you organize your notes, manage tasks, and get more done — beautifully.',
 };
 
 export default async function HomePage() {
   const { userId } = await auth();
 
-  // Authenticated users go directly to the private Dashboard
+  // If user is already logged in, redirect directly to dashboard
   if (userId) {
     redirect('/dashboard');
   }
 
   return (
-    <div className="min-h-screen liquid-glass-bg flex flex-col font-sans selection:bg-blue-500 selection:text-white">
-      {/* Ambient background light orbs */}
+    <div className="min-h-screen liquid-glass-bg relative overflow-x-hidden flex flex-col font-sans selection:bg-blue-500 selection:text-white">
+      {/* Soft Ambient Refraction Orbs in Background */}
+      <div className="ambient-orb ambient-orb-sky" />
       <div className="ambient-orb ambient-orb-indigo" />
       <div className="ambient-orb ambient-orb-peach" />
-      <div className="ambient-orb ambient-orb-sky" />
 
-      {/* Top Public Header */}
-      <header className="sticky top-0 z-50 glass-header px-6 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Image
-            src="/logo.png"
-            alt="TaskPad Logo"
-            width={36}
-            height={36}
-            className="h-9 w-9 rounded-xl shadow-md shadow-blue-500/20 object-contain"
-            priority
-          />
-          <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-slate-100">
+      {/* Modern Top Navigation Bar */}
+      <header className="sticky top-0 z-50 w-full glass-header px-6 sm:px-10 py-4 flex items-center justify-between border-b border-white/70 dark:border-white/10 backdrop-blur-2xl">
+        {/* Brand Logo */}
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="p-1 rounded-xl glass-card group-hover:scale-105 transition-transform shadow-md shadow-blue-500/20">
+            <Image
+              src="/logo.png"
+              alt="TaskPad"
+              width={34}
+              height={34}
+              className="h-8 w-8 rounded-lg object-contain"
+              priority
+            />
+          </div>
+          <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-slate-100">
             TaskPad
           </span>
-        </div>
+        </Link>
 
-        <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-slate-600 dark:text-slate-300">
-          <a href="#features" className="hover:text-blue-600 transition-colors">Features</a>
-          <a href="#workspace" className="hover:text-blue-600 transition-colors">Workspace</a>
-          <a href="#notifications" className="hover:text-blue-600 transition-colors">Background Reminders</a>
-          <a href="#security" className="hover:text-blue-600 transition-colors">Security</a>
+        {/* Public Navigation Links */}
+        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600 dark:text-slate-300">
+          <Link
+            href="/features"
+            className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
+            Features
+          </Link>
+          <Link
+            href="/pricing"
+            className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
+            Pricing
+          </Link>
+          <Link
+            href="/about"
+            className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
+            About
+          </Link>
         </nav>
 
-        <div className="flex items-center gap-2.5">
-          <Link href="/sign-in">
-            <Button variant="ghost" size="sm" className="h-8 px-3 text-xs font-semibold cursor-pointer">
+        {/* Top Right Action Button */}
+        <div className="flex items-center gap-3">
+          <Link href="/sign-in" className="hidden sm:inline-block">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 px-4 text-xs font-semibold rounded-full cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800/60"
+            >
               Sign In
             </Button>
           </Link>
           <Link href="/sign-up">
-            <Button size="sm" className="h-8 px-4 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm cursor-pointer">
+            <Button
+              size="sm"
+              className="h-9 px-5 text-xs font-bold rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/25 cursor-pointer transition-all hover:scale-[1.02]"
+            >
               Get Started
             </Button>
           </Link>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-16 sm:py-24 text-center max-w-6xl mx-auto z-10">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-blue-200/80 dark:border-blue-800/80 bg-blue-50/70 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-xs font-medium mb-6 shadow-2xs backdrop-blur-md">
-          <Sparkles className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-          <span>Next-Gen Apple Liquid Glass Aesthetics</span>
-        </div>
+      {/* Hero Section Matching User's Design Image */}
+      <main className="flex-1 max-w-7xl mx-auto w-full px-6 sm:px-10 py-12 sm:py-20 lg:py-24 z-10 flex flex-col justify-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+          {/* Left Column: Headlines, Description, CTAs, Social Proof */}
+          <div className="lg:col-span-6 flex flex-col items-start text-left space-y-7">
+            {/* Main Bold Headline */}
+            <h1 className="text-4xl sm:text-5xl lg:text-[56px] font-extrabold tracking-tight text-slate-900 dark:text-slate-100 leading-[1.12]">
+              Your Ideas <br />
+              Tasks &amp; Workspace <br />
+              <span className="bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 bg-clip-text text-transparent">
+                All in One Place
+              </span>
+            </h1>
 
-        <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50 max-w-4xl leading-tight sm:leading-none">
-          All your thoughts, tasks, and reminders.{' '}
-          <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 bg-clip-text text-transparent">
-            Pure glass clarity.
-          </span>
-        </h1>
+            {/* Subtitle */}
+            <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-lg leading-relaxed font-normal">
+              A modern productivity app to help you organize your notes, manage tasks, and get more
+              done — beautifully.
+            </p>
 
-        <p className="mt-6 text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
-          The unified productivity workspace combining distraction-free notes, organized folders, task checklists, and true background server-side reminders that fire even when your browser is closed.
-        </p>
-
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
-          <Link href="/sign-up">
-            <Button size="lg" className="h-11 px-6 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25 gap-2 cursor-pointer">
-              Open TaskPad Free
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href="/sign-in">
-            <Button variant="outline" size="lg" className="h-11 px-6 text-sm font-semibold glass-card cursor-pointer">
-              Sign In to Your Workspace
-            </Button>
-          </Link>
-        </div>
-
-        {/* Live Interactive Liquid Glass Showcase Mockup */}
-        <div className="mt-14 w-full glass-panel rounded-3xl p-4 sm:p-7 shadow-2xl border border-white/80 dark:border-white/10 text-left">
-          <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800/60 pb-3 mb-5">
-            <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-rose-400/80" />
-              <span className="h-3 w-3 rounded-full bg-amber-400/80" />
-              <span className="h-3 w-3 rounded-full bg-emerald-400/80" />
-              <span className="ml-2 text-xs font-semibold text-slate-500">taskpad.app/dashboard</span>
+            {/* Call to Action Buttons */}
+            <div className="flex flex-wrap items-center gap-4 pt-1">
+              <Link href="/sign-up">
+                <Button className="h-12 px-7 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-xl shadow-blue-600/30 cursor-pointer transition-all hover:scale-105 active:scale-95">
+                  Get Started Free
+                </Button>
+              </Link>
+              <Link href="/features">
+                <Button
+                  variant="outline"
+                  className="h-12 px-6 rounded-full glass-card hover:bg-white/95 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-sm flex items-center gap-2.5 shadow-sm border border-white/80 dark:border-white/10 cursor-pointer transition-all hover:scale-105 active:scale-95"
+                >
+                  <div className="h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
+                    <Play className="h-3 w-3 fill-blue-600 text-blue-600 ml-0.5" />
+                  </div>
+                  <span>Watch Demo</span>
+                </Button>
+              </Link>
             </div>
-            <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-              Live Scheduler Active
-            </span>
+
+            {/* Social Proof Statistics (Exact match to reference image) */}
+            <div className="pt-8 flex items-center gap-8 sm:gap-12 border-t border-slate-200/60 dark:border-slate-800/60 w-full max-w-lg">
+              <div>
+                <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                  10K+
+                </div>
+                <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                  Active Users
+                </div>
+              </div>
+
+              <div>
+                <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                  99.9%
+                </div>
+                <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                  Uptime
+                </div>
+              </div>
+
+              <div>
+                <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-1">
+                  4.8/5
+                </div>
+                <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1">
+                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                  <span>User Rating</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {/* Mock Dashboard Card */}
-            <div className="glass-card rounded-2xl p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">Good evening, Alex</h3>
-                  <p className="text-[10px] text-slate-400">Here is your productivity overview.</p>
-                </div>
-                <div className="h-7 w-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
-                  A
-                </div>
+          {/* Right Column: 3D Isometric Floating Liquid Glass Mockup */}
+          <div className="lg:col-span-6 relative flex items-center justify-center">
+            {/* Ambient Backlight Glow */}
+            <div className="absolute -inset-4 bg-gradient-to-tr from-sky-400/20 via-blue-500/20 to-indigo-500/20 rounded-3xl blur-3xl -z-10" />
+
+            {/* 3D Mockup Container */}
+            <div className="relative w-full rounded-3xl overflow-hidden glass-panel p-2.5 sm:p-4 shadow-2xl border border-white/90 dark:border-white/10 group hover:shadow-blue-500/15 transition-all duration-700">
+              <div className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden shadow-inner bg-slate-50 dark:bg-slate-900">
+                <Image
+                  src="/hero-mockup.png"
+                  alt="TaskPad 3D Liquid Glass Interface Mockup"
+                  fill
+                  className="object-cover object-center group-hover:scale-[1.02] transition-transform duration-700"
+                  priority
+                />
               </div>
 
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                <div className="p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/60">
-                  <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-medium">Completed</span>
-                  <div className="text-xl font-bold text-emerald-800 dark:text-emerald-200">35</div>
+              {/* Floating Glass Pill Widget */}
+              <div className="absolute bottom-6 right-6 hidden sm:flex items-center gap-2.5 px-4 py-2.5 rounded-2xl glass-panel shadow-xl border border-white/90 dark:border-white/20 backdrop-blur-xl animate-pulse">
+                <Sparkles className="h-4 w-4 text-cyan-500" />
+                <div className="text-[11px] font-bold text-slate-800 dark:text-slate-100">
+                  Stay focused • Be productive
                 </div>
-                <div className="p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/60">
-                  <span className="text-[10px] text-blue-700 dark:text-blue-300 font-medium">Remaining</span>
-                  <div className="text-xl font-bold text-blue-800 dark:text-blue-200">18</div>
-                </div>
-              </div>
-
-              <div className="p-2 rounded-xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 text-[11px] space-y-1.5">
-                <div className="flex items-center gap-2 font-medium text-slate-800 dark:text-slate-200">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                  <span>Mathematics Assignment</span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-400 text-[10px]">
-                  <Clock className="h-3 w-3" />
-                  <span>7:30 PM (Asia/Karachi) • Reminder Active</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Mock Note Editor Card */}
-            <div className="glass-card rounded-2xl p-4 space-y-2">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-                <span className="text-xs font-bold text-slate-900 dark:text-slate-100">Project Ideas</span>
-                <span className="text-[10px] text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full font-medium">
-                  Saved
-                </span>
-              </div>
-              <div className="text-[11px] text-slate-600 dark:text-slate-300 space-y-1.5 pt-1">
-                <p className="font-semibold text-slate-800 dark:text-slate-200">Autonomous Web Agent Integration</p>
-                <p className="text-slate-400 text-[10px]">
-                  • Cloud-native PostgreSQL with Supabase RLS<br />
-                  • Apple Liquid Glass frosted aesthetics<br />
-                  • Subtasks & multi-device Web Push notifications
-                </p>
-              </div>
-              <div className="pt-2 text-[10px] text-slate-400 flex items-center justify-between border-t border-slate-100 dark:border-slate-800">
-                <span>Folder: Projects</span>
-                <span>Last edited just now</span>
-              </div>
-            </div>
-
-            {/* Mock Workspace & Folders */}
-            <div className="glass-card rounded-2xl p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-900 dark:text-slate-100">Workspace Folders</span>
-                <span className="text-[10px] text-blue-600 font-medium">4 Folders</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-[11px]">
-                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 flex items-center gap-2">
-                  <span>🌿</span>
-                  <span className="font-medium">Personal</span>
-                </div>
-                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 flex items-center gap-2">
-                  <span>🎓</span>
-                  <span className="font-medium">School</span>
-                </div>
-                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 flex items-center gap-2">
-                  <span>🚀</span>
-                  <span className="font-medium">Projects</span>
-                </div>
-                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 flex items-center gap-2">
-                  <span>💡</span>
-                  <span className="font-medium">Ideas</span>
-                </div>
-              </div>
-              <div className="p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/60 text-[10px] text-indigo-700 dark:text-indigo-300 flex items-center gap-2">
-                <Bell className="h-4 w-4 text-indigo-600 shrink-0" />
-                <span>Device Push & Transactional Email verified</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Feature Grid */}
-        <section id="features" className="mt-24 text-left w-full">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              Engineered for absolute focus and reliability
+        {/* Feature Highlights Grid Preview */}
+        <section className="mt-28 pt-12 border-t border-slate-200/60 dark:border-slate-800/60">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <h2 className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-2">
+              Everything You Need
             </h2>
-            <p className="mt-2 text-xs sm:text-sm text-slate-500">
-              Not a prototype. A complete, production-grade productivity system.
+            <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+              Designed for speed, calm, and effortless organization
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <div className="glass-card rounded-2xl p-5 space-y-3">
-              <div className="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400 flex items-center justify-center">
-                <FileText className="h-5 w-5" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Link
+              href="/features#notes"
+              className="glass-card rounded-3xl p-6 hover:scale-[1.02] transition-all group"
+            >
+              <div className="h-12 w-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center mb-4 shadow-xs">
+                <FileText className="h-6 w-6" />
               </div>
-              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Distraction-Free Notes</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Full-featured Tiptap editor with headings, checklists, tables, code blocks, autosave, and immutable version snapshots.
+              <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors">
+                Fluid Note Taking
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                Distraction-free Markdown editor with checklists, tables, code blocks, and automatic
+                cloud saves.
               </p>
-            </div>
+            </Link>
 
-            <div className="glass-card rounded-2xl p-5 space-y-3">
-              <div className="h-10 w-10 rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400 flex items-center justify-center">
-                <CheckSquare className="h-5 w-5" />
+            <Link
+              href="/features#reminders"
+              className="glass-card rounded-3xl p-6 hover:scale-[1.02] transition-all group"
+            >
+              <div className="h-12 w-12 rounded-2xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center mb-4 shadow-xs">
+                <Clock className="h-6 w-6" />
               </div>
-              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Task Management</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Quick Task Generator, subtask checklists with progress tracking, priorities, recurrence, and smart filters (Today, Upcoming, Overdue).
+              <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors">
+                24/7 Background Alarms
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                True server-side reminder scheduler. Alarms fire right on schedule even when your browser is closed.
               </p>
-            </div>
+            </Link>
 
-            <div className="glass-card rounded-2xl p-5 space-y-3">
-              <div className="h-10 w-10 rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 flex items-center justify-center">
-                <Bell className="h-5 w-5" />
+            <Link
+              href="/pricing"
+              className="glass-card rounded-3xl p-6 hover:scale-[1.02] transition-all group"
+            >
+              <div className="h-12 w-12 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 flex items-center justify-center mb-4 shadow-xs">
+                <Layers className="h-6 w-6" />
               </div>
-              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Independent Background Scheduler</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Reminders run on the server. Even if your browser or laptop is shut off, web push and transactional emails deliver right on time.
+              <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors">
+                Workspaces &amp; Pricing
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                Start with our generous Free Starter tier, or unlock Unlimited workspaces with Pro Monthly and Annual plans.
               </p>
-            </div>
-
-            <div className="glass-card rounded-2xl p-5 space-y-3">
-              <div className="h-10 w-10 rounded-xl bg-sky-100 text-sky-600 dark:bg-sky-950 dark:text-sky-400 flex items-center justify-center">
-                <Globe className="h-5 w-5" />
-              </div>
-              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Canonical Timezones & i18n</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Calculates exact UTC intervals with zero drift. Full multilingual and bidirectional RTL support for English, Urdu, Hindi, and Arabic.
-              </p>
-            </div>
+            </Link>
           </div>
         </section>
 
-        {/* CTA Footer Banner */}
-        <div className="mt-20 w-full glass-panel rounded-3xl p-8 sm:p-12 text-center border border-white/80 dark:border-white/10 shadow-xl space-y-4">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">
-            Ready to experience TaskPad?
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto">
-            Sign up in seconds with Clerk and experience the calm, focused productivity of Liquid Glass.
-          </p>
-          <div className="pt-2">
-            <Link href="/sign-up">
-              <Button size="lg" className="h-11 px-8 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-md cursor-pointer">
-                Create Free Account
-              </Button>
+        {/* Bottom CTA Banner */}
+        <section className="mt-20 glass-panel rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden shadow-xl border border-white/80 dark:border-white/10">
+          <div className="max-w-xl mx-auto space-y-4">
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+              Ready to simplify your day?
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+              Join thousands of professionals organizing thoughts, tasks, and alarms in TaskPad.
+            </p>
+            <div className="pt-3">
+              <Link href="/sign-up">
+                <Button className="h-12 px-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-xl shadow-blue-600/30 cursor-pointer">
+                  Get Started Free Today
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Clean Modern Public Footer */}
+      <footer className="glass-header border-t border-white/60 dark:border-slate-800/60 py-8 px-6 sm:px-10 z-10">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-2">
+            <Image src="/logo.png" alt="TaskPad" width={24} height={24} className="h-6 w-6 rounded-md" />
+            <span className="font-bold text-slate-800 dark:text-slate-200">TaskPad</span>
+            <span>• © 2026 All rights reserved</span>
+          </div>
+
+          <div className="flex items-center gap-6 font-medium">
+            <Link href="/features" className="hover:text-blue-600 transition-colors">
+              Features
+            </Link>
+            <Link href="/pricing" className="hover:text-blue-600 transition-colors">
+              Pricing
+            </Link>
+            <Link href="/about" className="hover:text-blue-600 transition-colors">
+              About
+            </Link>
+            <Link href="/sign-in" className="hover:text-blue-600 transition-colors">
+              Sign In
             </Link>
           </div>
         </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="glass-header px-6 py-4 text-center text-xs text-slate-400 border-t border-slate-200/60 dark:border-slate-800/60 z-10">
-        <p>© 2026 TaskPad. Apple Liquid Glass Inspired Productivity Web Application. Built with Next.js, Clerk & Supabase.</p>
       </footer>
     </div>
   );

@@ -144,6 +144,17 @@ export function CreateTaskDialog({
       if (onTaskCreated) onTaskCreated();
       onClose();
     } catch (err: any) {
+      if (err.message && err.message.includes('PLAN_LIMIT_REACHED')) {
+        addToast({
+          type: 'error',
+          title: 'Plan Limit Reached (4 Tasks Max)',
+          description: 'Free accounts are limited to 4 tasks. Opening pricing page...',
+        });
+        setTimeout(() => {
+          window.location.href = '/pricing?reason=task_limit';
+        }, 1200);
+        return;
+      }
       addToast({ type: 'error', title: 'Error Creating Task', description: err.message || 'Something went wrong' });
     } finally {
       setIsSubmitting(false);

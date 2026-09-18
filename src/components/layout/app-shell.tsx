@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   CheckSquare,
@@ -16,6 +16,8 @@ import {
   Search,
   Sparkles,
   Loader2,
+  ArrowLeft,
+  Crown,
 } from 'lucide-react';
 import {
   UserButton,
@@ -31,6 +33,7 @@ import { CommandPalette } from '@/components/layout/command-palette';
 import { KeyboardShortcuts } from '@/components/layout/keyboard-shortcuts';
 import { CreateTaskDialog } from '@/components/tasks/create-task-dialog';
 import { createNoteAction } from '@/actions/notes';
+import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 import type { Workspace, Project, User } from '@/types';
 
@@ -50,6 +53,8 @@ export function AppShell({
   children,
 }: AppShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { addToast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
   const [isCreatingNote, setIsCreatingNote] = useState(false);
@@ -67,8 +72,19 @@ export function AppShell({
         contentText: '',
       });
       window.location.href = `/notes?id=${newNote.id}`;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error creating note:', err);
+      if (err?.message && err.message.includes('PLAN_LIMIT_REACHED')) {
+        addToast({
+          type: 'error',
+          title: 'Plan Limit Reached (2 Notes Max)',
+          description: 'Free accounts are limited to 2 notes. Opening pricing page...',
+        });
+        setTimeout(() => {
+          window.location.href = '/pricing?reason=note_limit';
+        }, 1200);
+        return;
+      }
       window.location.href = '/notes?action=new';
     } finally {
       setIsCreatingNote(false);
@@ -206,6 +222,23 @@ export function AppShell({
             <Settings className={cn("h-4 w-4", pathname.startsWith('/settings') ? "text-white" : "text-slate-400")} />
             <span>Settings</span>
           </Link>
+
+          {/* 6. Pricing & Plans */}
+          <Link
+            href="/pricing"
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all",
+              pathname.startsWith('/pricing')
+                ? "nav-active-glow font-semibold"
+                : "text-slate-600 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100"
+            )}
+          >
+            <Crown className={cn("h-4 w-4", pathname.startsWith('/pricing') ? "text-amber-400" : "text-amber-500")} />
+            <span>Pricing &amp; Plans</span>
+            <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 font-extrabold uppercase">
+              Pro
+            </span>
+          </Link>
         </nav>
 
         {/* User Profile & Quick Controls Footer */}
@@ -237,12 +270,24 @@ export function AppShell({
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden z-20">
         {/* Top Liquid Glass Header Bar */}
         <header className="h-14 border-b border-white/60 dark:border-slate-800/60 glass-header flex items-center justify-between px-4 z-20 shrink-0">
-          {/* Mobile Menu Hamburger & Search */}
+          {/* Mobile Back Arrow, Menu Hamburger & Search */}
           <div className="flex items-center gap-2">
+            {/* Mobile Left Back Arrow Button (shown when not on root dashboard) */}
+            {pathname !== '/dashboard' && (
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="md:hidden p-2 rounded-xl glass-card text-slate-700 dark:text-slate-200 hover:text-blue-600 transition-colors shadow-2xs cursor-pointer"
+                title="Go Back"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden p-2 rounded-xl hover:bg-white/60 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-300"
+              className="md:hidden p-2 rounded-xl hover:bg-white/60 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-300 cursor-pointer"
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -469,6 +514,18 @@ export function AppShell({
               >
                 <Settings className="h-4 w-4" />
                 <span>Settings</span>
+              </Link>
+
+              <Link
+                href="/pricing"
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium",
+                  pathname.startsWith('/pricing') ? "bg-blue-600 text-white font-semibold" : "text-slate-600 dark:text-slate-300"
+                )}
+              >
+                <Crown className="h-4 w-4 text-amber-500" />
+                <span>Pricing &amp; Plans</span>
               </Link>
             </div>
 
