@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -108,14 +109,19 @@ export function AppShell({
         {/* App Brand Header */}
         <div className="p-4 border-b border-white/50 dark:border-slate-800/50 flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2.5 group">
-            <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-extrabold text-sm shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-              TP
-            </div>
+            <Image
+              src="/logo.png"
+              alt="TaskPad Logo"
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-xl shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform object-contain"
+              priority
+            />
             <div>
               <div className="font-bold text-sm text-slate-900 dark:text-slate-100 tracking-tight">
                 TaskPad
               </div>
-              <div className="text-[10px] text-slate-400 font-medium">Liquid Glass</div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Liquid Glass</div>
             </div>
           </Link>
         </div>
@@ -387,9 +393,13 @@ export function AppShell({
           <div className="relative flex flex-col w-72 max-w-[80vw] glass-dock p-4 z-10 animate-in slide-in-from-left">
             <div className="flex items-center justify-between pb-3 border-b border-white/60 dark:border-slate-800/60">
               <span className="font-bold text-base text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <div className="h-7 w-7 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
-                  TP
-                </div>
+                <Image
+                  src="/logo.png"
+                  alt="TaskPad Logo"
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 rounded-xl shadow-xs object-contain"
+                />
                 TaskPad
               </span>
               <button

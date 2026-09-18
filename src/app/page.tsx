@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import { auth } from '@clerk/nextjs/server';
 import {
@@ -42,9 +43,14 @@ export default async function HomePage() {
       {/* Top Public Header */}
       <header className="sticky top-0 z-50 glass-header px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-base shadow-md shadow-blue-500/20">
-            TP
-          </div>
+          <Image
+            src="/logo.png"
+            alt="TaskPad Logo"
+            width={36}
+            height={36}
+            className="h-9 w-9 rounded-xl shadow-md shadow-blue-500/20 object-contain"
+            priority
+          />
           <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-slate-100">
             TaskPad
           </span>

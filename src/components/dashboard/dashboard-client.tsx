@@ -40,6 +40,7 @@ import { createNoteAction } from '@/actions/notes';
 import { useToast } from '@/components/ui/toast';
 import type { Task, Note, ProductivityStats, Project, ActivityLog, Reminder } from '@/types';
 import { cn } from '@/lib/utils';
+import { AnimatedAnalyticsBar, useCountUp } from './animated-analytics-bar';
 
 interface DashboardClientProps {
   userName: string;
@@ -128,6 +129,14 @@ export function DashboardClient({
     { day: 'Fr', completed: 8, remaining: 1 },
   ];
 
+  // Animated metric counters on page open
+  const completedTarget = stats.tasks_completed || tasks.filter((t) => t.status === 'completed').length;
+  const remainingTarget = stats.tasks_remaining || tasks.filter((t) => t.status !== 'completed').length;
+  const animCompletedCount = useCountUp(completedTarget, 1200);
+  const animRemainingCount = useCountUp(remainingTarget, 1200);
+  const animOverdueCount = useCountUp(overdueTasks.length, 1000);
+  const animNotesCount = useCountUp(stats.notes_created || notes.length, 1000);
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Dialogs */}
@@ -158,7 +167,7 @@ export function DashboardClient({
             {greeting}, {userName}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            Here&apos;s your productivity overview.
+            Here&apos;s your live productivity overview.
           </p>
         </div>
 
@@ -181,7 +190,16 @@ export function DashboardClient({
         </div>
       </div>
 
-      {/* 4 Glass Statistic Cards with subtle depth & trend indicators */}
+      {/* Live Animated Top Analytics Telemetry Bar */}
+      <AnimatedAnalyticsBar
+        tasks={tasks}
+        notes={notes}
+        stats={stats}
+        reminders={reminders}
+        userName={userName}
+      />
+
+      {/* 4 Glass Statistic Cards with subtle depth & animated live count-ups */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* 1. Tasks Completed */}
         <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden group">
@@ -193,7 +211,7 @@ export function DashboardClient({
           </div>
           <div className="mt-2.5">
             <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-              {stats.tasks_completed || tasks.filter((t) => t.status === 'completed').length}
+              {animCompletedCount}
             </span>
           </div>
           <div className="mt-3">
@@ -214,7 +232,7 @@ export function DashboardClient({
           </div>
           <div className="mt-2.5">
             <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-              {stats.tasks_remaining || tasks.filter((t) => t.status !== 'completed').length}
+              {animRemainingCount}
             </span>
           </div>
           <div className="mt-3">
@@ -235,7 +253,7 @@ export function DashboardClient({
           </div>
           <div className="mt-2.5">
             <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-              {overdueTasks.length}
+              {animOverdueCount}
             </span>
           </div>
           <div className="mt-3">
@@ -263,7 +281,7 @@ export function DashboardClient({
           </div>
           <div className="mt-2.5">
             <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-              {stats.notes_created || notes.length}
+              {animNotesCount}
             </span>
           </div>
           <div className="mt-3">
