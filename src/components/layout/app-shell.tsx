@@ -306,18 +306,18 @@ export function AppShell({
         </header>
 
         {/* Dynamic Page View Body */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 pb-24 md:pb-6">
+        <main className="flex-1 overflow-y-auto p-3.5 sm:p-6 pb-28 md:pb-6">
           {children}
         </main>
 
         {/* Mobile Bottom Navigation Bar - STRICT 5 PRIMARY DESTINATIONS (Spec #44 & #45) */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 glass-dock border-t border-white/70 dark:border-slate-800/70 flex items-center justify-around z-30 px-3">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 glass-dock border-t border-white/80 dark:border-slate-800/80 flex items-center justify-around z-30 px-3 shadow-2xl">
           {/* 1. Dashboard */}
           <Link
             href="/dashboard"
             className={cn(
-              "flex flex-col items-center gap-1 text-[10px]",
-              pathname === '/dashboard' ? 'text-blue-600 font-bold' : 'text-slate-500'
+              "flex flex-col items-center gap-1 text-[11px] transition-colors",
+              pathname === '/dashboard' ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-600 dark:text-slate-400 font-medium'
             )}
           >
             <LayoutDashboard className="h-4 w-4" />
@@ -328,8 +328,8 @@ export function AppShell({
           <Link
             href="/tasks"
             className={cn(
-              "flex flex-col items-center gap-1 text-[10px]",
-              pathname.startsWith('/tasks') ? 'text-blue-600 font-bold' : 'text-slate-500'
+              "flex flex-col items-center gap-1 text-[11px] transition-colors",
+              pathname.startsWith('/tasks') ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-600 dark:text-slate-400 font-medium'
             )}
           >
             <CheckSquare className="h-4 w-4" />
@@ -341,7 +341,7 @@ export function AppShell({
             type="button"
             onClick={handleNewNoteClick}
             disabled={isCreatingNote}
-            className="flex items-center justify-center -mt-5 h-12 w-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 cursor-pointer hover:scale-105 active:scale-95 transition-all"
+            className="flex items-center justify-center -mt-6 h-13 w-13 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/35 cursor-pointer hover:scale-105 active:scale-95 transition-all"
             title="Create New Note"
           >
             {isCreatingNote ? (
@@ -355,8 +355,8 @@ export function AppShell({
           <Link
             href="/workspaces"
             className={cn(
-              "flex flex-col items-center gap-1 text-[10px]",
-              pathname.startsWith('/workspaces') ? 'text-blue-600 font-bold' : 'text-slate-500'
+              "flex flex-col items-center gap-1 text-[11px] transition-colors",
+              pathname.startsWith('/workspaces') ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-600 dark:text-slate-400 font-medium'
             )}
           >
             <FolderKanban className="h-4 w-4" />
@@ -367,8 +367,8 @@ export function AppShell({
           <Link
             href="/settings"
             className={cn(
-              "flex flex-col items-center gap-1 text-[10px]",
-              pathname.startsWith('/settings') ? 'text-blue-600 font-bold' : 'text-slate-500'
+              "flex flex-col items-center gap-1 text-[11px] transition-colors",
+              pathname.startsWith('/settings') ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-600 dark:text-slate-400 font-medium'
             )}
           >
             <Settings className="h-4 w-4" />

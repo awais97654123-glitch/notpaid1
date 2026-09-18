@@ -159,26 +159,26 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
       />
 
       {/* Top Header Bar (Spec #12: Tasks, Search, Filter, Sort, New Task) */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl glass-panel">
+      <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 p-4 sm:p-6 rounded-2xl sm:rounded-3xl glass-panel">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
             <CheckSquare className="h-6 w-6 text-blue-600" />
             Tasks
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-0.5 font-medium">
             Real-time scheduled task pipeline with server reminders.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
           {/* Search */}
-          <div className="relative">
-            <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-2.5" />
+          <div className="relative flex-1 sm:flex-initial">
+            <Search className="h-3.5 w-3.5 text-slate-500 absolute left-3 top-2.5" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search tasks..."
-              className="h-8 pl-8 pr-3 text-xs w-44 bg-white/60 dark:bg-slate-800/60 rounded-xl"
+              className="h-8 pl-8 pr-3 text-xs w-full sm:w-44 bg-white/70 dark:bg-slate-800/70 rounded-xl font-medium text-slate-900 dark:text-slate-100"
             />
           </div>
 
@@ -186,7 +186,7 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
-            className="h-8 text-xs rounded-xl border border-white/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 px-2.5 text-slate-700 dark:text-slate-300 outline-none cursor-pointer"
+            className="h-8 text-xs rounded-xl border border-white/80 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/70 px-2.5 text-slate-800 dark:text-slate-200 outline-none cursor-pointer font-medium"
           >
             <option value="all">All Priorities</option>
             <option value="urgent">Urgent</option>
@@ -198,7 +198,7 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
           <Button
             onClick={() => setCreateTaskModalOpen(true)}
             size="sm"
-            className="h-8 px-3.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-xs gap-1.5 cursor-pointer"
+            className="h-8 px-3.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-xs gap-1.5 cursor-pointer ml-auto sm:ml-0"
           >
             <Plus className="h-3.5 w-3.5" />
             New Task
@@ -207,9 +207,9 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
       </div>
 
       {/* Top Split Section: Recent Tasks (Left) & New Task Generator (Right) (Spec #12, #13 & Mockup) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
         {/* Left: Recent Tasks */}
-        <div className="glass-panel rounded-3xl p-5 sm:p-6 flex flex-col justify-between">
+        <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4 border-b border-white/60 dark:border-slate-800/60 pb-3">
               <div className="flex items-center gap-2">
@@ -218,7 +218,7 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
                   Recent Tasks
                 </h2>
               </div>
-              <span className="text-xs text-slate-400 font-medium">
+              <span className="text-xs text-slate-600 dark:text-slate-400 font-semibold">
                 {filteredRecentTasks.length} recorded
               </span>
             </div>
@@ -239,13 +239,13 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
                         className={cn(
                           "text-xs sm:text-sm font-semibold truncate",
                           task.status === 'completed'
-                            ? "line-through text-slate-400"
+                            ? "line-through text-slate-500 dark:text-slate-500"
                             : "text-slate-900 dark:text-slate-100 group-hover:text-blue-600"
                         )}
                       >
                         {task.title}
                       </div>
-                      <div className="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5">
+                      <div className="text-[11px] text-slate-600 dark:text-slate-400 font-medium flex items-center gap-2 mt-0.5">
                         {task.due_date && <span>{task.due_date}</span>}
                         {task.due_time && <span>at {task.due_time}</span>}
                         {task.subtasks && task.subtasks.length > 0 && (
@@ -281,14 +281,14 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
             </div>
           </div>
 
-          <div className="pt-4 mt-3 border-t border-white/60 dark:border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
+          <div className="pt-4 mt-3 border-t border-white/60 dark:border-slate-800/60 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 font-medium">
             <span>Click any item to view details & subtasks</span>
-            <span className="text-blue-600 font-semibold">Ready</span>
+            <span className="text-blue-600 dark:text-blue-400 font-bold">Ready</span>
           </div>
         </div>
 
         {/* Right: New Task Generator (Spec #12 & #13 & Mockup) */}
-        <div className="glass-panel rounded-3xl p-5 sm:p-6 flex flex-col justify-between">
+        <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between">
           <form onSubmit={handleGeneratorSubmit} className="space-y-4">
             <div className="flex items-center justify-between border-b border-white/60 dark:border-slate-800/60 pb-3">
               <div className="flex items-center gap-2">
@@ -297,66 +297,66 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
                   New Task Generator
                 </h2>
               </div>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold uppercase">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold uppercase">
                 Instant Scheduler
               </span>
             </div>
 
             {/* Task Title */}
             <div>
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
                 Task Title
               </label>
               <Input
                 value={genTitle}
                 onChange={(e) => setGenTitle(e.target.value)}
                 placeholder="e.g. Complete Mathematics Assignment"
-                className="mt-1 h-9 rounded-xl bg-white/70 dark:bg-slate-800/70 text-xs font-medium"
+                className="mt-1 h-9 rounded-xl bg-white/80 dark:bg-slate-800/80 text-xs font-semibold text-slate-900 dark:text-slate-100 shadow-2xs"
                 required
               />
             </div>
 
             {/* Date & Time Row */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                  <Calendar className="h-3 w-3 text-blue-600" />
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5 text-blue-600" />
                   Due Date
                 </label>
                 <Input
                   type="date"
                   value={genDate}
                   onChange={(e) => setGenDate(e.target.value)}
-                  className="mt-1 h-9 rounded-xl bg-white/70 dark:bg-slate-800/70 text-xs cursor-pointer"
+                  className="mt-1 h-9 rounded-xl bg-white/80 dark:bg-slate-800/80 text-xs font-semibold text-slate-900 dark:text-slate-100 cursor-pointer shadow-2xs"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                  <Clock className="h-3 w-3 text-blue-600" />
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                  <Clock className="h-3.5 w-3.5 text-blue-600" />
                   Due Time
                 </label>
                 <Input
                   type="time"
                   value={genTime}
                   onChange={(e) => setGenTime(e.target.value)}
-                  className="mt-1 h-9 rounded-xl bg-white/70 dark:bg-slate-800/70 text-xs cursor-pointer"
+                  className="mt-1 h-9 rounded-xl bg-white/80 dark:bg-slate-800/80 text-xs font-semibold text-slate-900 dark:text-slate-100 cursor-pointer shadow-2xs"
                   required
                 />
               </div>
             </div>
 
             {/* Priority & Reminder */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
                   Priority
                 </label>
                 <select
                   value={genPriority}
                   onChange={(e) => setGenPriority(e.target.value as TaskPriority)}
-                  className="mt-1 h-9 w-full rounded-xl border border-white/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-800/70 px-2.5 text-xs text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+                  className="mt-1 h-9 w-full rounded-xl border border-white/80 dark:border-slate-800/60 bg-white/80 dark:bg-slate-800/80 px-2.5 text-xs text-slate-900 dark:text-slate-100 font-semibold outline-none cursor-pointer shadow-2xs"
                 >
                   <option value="urgent">Urgent</option>
                   <option value="high">High</option>
@@ -366,14 +366,14 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                  <Bell className="h-3 w-3 text-indigo-600" />
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                  <Bell className="h-3.5 w-3.5 text-indigo-600" />
                   Reminder
                 </label>
                 <select
                   value={genReminder}
                   onChange={(e) => setGenReminder(Number(e.target.value))}
-                  className="mt-1 h-9 w-full rounded-xl border border-white/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-800/70 px-2.5 text-xs text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+                  className="mt-1 h-9 w-full rounded-xl border border-white/80 dark:border-slate-800/60 bg-white/80 dark:bg-slate-800/80 px-2.5 text-xs text-slate-900 dark:text-slate-100 font-semibold outline-none cursor-pointer shadow-2xs"
                 >
                   <option value="0">At time of task</option>
                   <option value="15">15 minutes before</option>
@@ -385,14 +385,14 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
 
             {/* Subtasks (Spec #17) */}
             <div>
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
                 Checklist Subtasks (comma separated)
               </label>
               <Input
                 value={genSubtasks}
                 onChange={(e) => setGenSubtasks(e.target.value)}
                 placeholder="Research, Write, Review, Submit"
-                className="mt-1 h-9 rounded-xl bg-white/70 dark:bg-slate-800/70 text-xs"
+                className="mt-1 h-9 rounded-xl bg-white/80 dark:bg-slate-800/80 text-xs font-medium text-slate-900 dark:text-slate-100 shadow-2xs"
               />
             </div>
 
@@ -409,9 +409,9 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
       </div>
 
       {/* Bottom Section: Today's Tasks, Upcoming, Overdue (Spec #15 & Mockup) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
         {/* Today's Tasks */}
-        <div className="glass-panel rounded-3xl p-5 space-y-3">
+        <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-5 space-y-3">
           <div className="flex items-center justify-between border-b border-white/60 dark:border-slate-800/60 pb-2.5">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-blue-600" />
@@ -434,16 +434,16 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
                 <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate">
                   {t.title}
                 </div>
-                <div className="flex items-center justify-between text-[10px] text-slate-400 mt-2">
+                <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-2">
                   <span>{t.due_time || 'Today'}</span>
-                  <Badge variant="outline" className="text-[9px] uppercase">
+                  <Badge variant="outline" className="text-[9px] uppercase font-bold">
                     Today
                   </Badge>
                 </div>
               </div>
             ))}
             {todayTasks.length === 0 && (
-              <div className="py-8 text-center text-xs text-slate-400 border border-dashed rounded-2xl border-slate-200 dark:border-slate-800">
+              <div className="py-8 text-center text-xs text-slate-600 dark:text-slate-400 border border-dashed rounded-2xl border-slate-300/80 dark:border-slate-800 font-medium">
                 No tasks due today.
               </div>
             )}
@@ -451,7 +451,7 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
         </div>
 
         {/* Upcoming */}
-        <div className="glass-panel rounded-3xl p-5 space-y-3">
+        <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-5 space-y-3">
           <div className="flex items-center justify-between border-b border-white/60 dark:border-slate-800/60 pb-2.5">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-indigo-600" />
@@ -474,16 +474,16 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
                 <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate">
                   {t.title}
                 </div>
-                <div className="flex items-center justify-between text-[10px] text-slate-400 mt-2">
+                <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-2">
                   <span>{t.due_date}</span>
-                  <Badge variant="outline" className="text-[9px] text-indigo-600">
+                  <Badge variant="outline" className="text-[9px] text-indigo-600 font-bold">
                     Upcoming
                   </Badge>
                 </div>
               </div>
             ))}
             {upcomingTasks.length === 0 && (
-              <div className="py-8 text-center text-xs text-slate-400 border border-dashed rounded-2xl border-slate-200 dark:border-slate-800">
+              <div className="py-8 text-center text-xs text-slate-600 dark:text-slate-400 border border-dashed rounded-2xl border-slate-300/80 dark:border-slate-800 font-medium">
                 No upcoming tasks scheduled.
               </div>
             )}
@@ -491,7 +491,7 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
         </div>
 
         {/* Overdue */}
-        <div className="glass-panel rounded-3xl p-5 space-y-3">
+        <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-5 space-y-3">
           <div className="flex items-center justify-between border-b border-white/60 dark:border-slate-800/60 pb-2.5">
             <div className="flex items-center gap-2">
               <AlertCircle className="h-4 w-4 text-rose-600" />
@@ -511,19 +511,19 @@ export function TasksClient({ tasks: initialTasks, projects }: TasksClientProps)
                 onClick={() => setSelectedTask(t)}
                 className="glass-card rounded-2xl p-3 cursor-pointer border-rose-200 dark:border-rose-900/60 hover:border-rose-400 transition-all shadow-2xs"
               >
-                <div className="font-semibold text-xs text-rose-900 dark:text-rose-200 truncate">
+                <div className="font-semibold text-xs text-rose-950 dark:text-rose-200 truncate">
                   {t.title}
                 </div>
-                <div className="flex items-center justify-between text-[10px] text-rose-500 mt-2">
+                <div className="flex items-center justify-between text-[11px] text-rose-600 dark:text-rose-400 font-medium mt-2">
                   <span>Due {t.due_date}</span>
-                  <Badge variant="destructive" className="text-[9px]">
+                  <Badge variant="destructive" className="text-[9px] font-bold">
                     Overdue
                   </Badge>
                 </div>
               </div>
             ))}
             {overdueTasks.length === 0 && (
-              <div className="py-8 text-center text-xs text-emerald-600 dark:text-emerald-400 border border-dashed rounded-2xl border-emerald-200 dark:border-emerald-900/40">
+              <div className="py-8 text-center text-xs text-emerald-600 dark:text-emerald-400 border border-dashed rounded-2xl border-emerald-200 dark:border-emerald-900/40 font-semibold">
                 Zero overdue tasks! Great work.
               </div>
             )}

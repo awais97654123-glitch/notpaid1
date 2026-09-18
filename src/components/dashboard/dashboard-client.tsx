@@ -182,16 +182,16 @@ export function DashboardClient({
       </div>
 
       {/* 4 Glass Statistic Cards with subtle depth & trend indicators */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* 1. Tasks Completed */}
-        <div className="glass-card rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden group">
+        <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Tasks Completed</span>
-            <div className="h-6 w-6 rounded-full bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 tracking-tight">Tasks Completed</span>
+            <div className="h-7 w-7 rounded-full bg-emerald-100 dark:bg-emerald-950/70 flex items-center justify-center shadow-2xs">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             </div>
           </div>
-          <div className="mt-2">
+          <div className="mt-2.5">
             <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
               {stats.tasks_completed || tasks.filter((t) => t.status === 'completed').length}
             </span>
@@ -200,19 +200,19 @@ export function DashboardClient({
             <div className="h-1.5 w-full bg-emerald-500/20 rounded-full overflow-hidden">
               <div className="h-full bg-emerald-500 rounded-full w-4/5 transition-all duration-500" />
             </div>
-            <span className="text-[10px] text-slate-400 mt-1 block">+12% this week</span>
+            <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-1.5 block">+12% this week</span>
           </div>
         </div>
 
         {/* 2. Tasks Remaining */}
-        <div className="glass-card rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden group">
+        <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Tasks Remaining</span>
-            <div className="h-6 w-6 rounded-full bg-blue-50 dark:bg-blue-950/60 flex items-center justify-center">
-              <Clock className="h-3.5 w-3.5 text-blue-500" />
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 tracking-tight">Tasks Remaining</span>
+            <div className="h-7 w-7 rounded-full bg-blue-100 dark:bg-blue-950/70 flex items-center justify-center shadow-2xs">
+              <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
-          <div className="mt-2">
+          <div className="mt-2.5">
             <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
               {stats.tasks_remaining || tasks.filter((t) => t.status !== 'completed').length}
             </span>
@@ -221,19 +221,19 @@ export function DashboardClient({
             <div className="h-1.5 w-full bg-blue-500/20 rounded-full overflow-hidden">
               <div className="h-full bg-blue-500 rounded-full w-3/5 transition-all duration-500" />
             </div>
-            <span className="text-[10px] text-slate-400 mt-1 block">In progress & to-do</span>
+            <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-1.5 block">In progress & to-do</span>
           </div>
         </div>
 
         {/* 3. Overdue */}
-        <div className="glass-card rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden group">
+        <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Overdue</span>
-            <div className="h-6 w-6 rounded-full bg-rose-50 dark:bg-rose-950/60 flex items-center justify-center">
-              <AlertCircle className="h-3.5 w-3.5 text-rose-500" />
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 tracking-tight">Overdue</span>
+            <div className="h-7 w-7 rounded-full bg-rose-100 dark:bg-rose-950/70 flex items-center justify-center shadow-2xs">
+              <AlertCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" />
             </div>
           </div>
-          <div className="mt-2">
+          <div className="mt-2.5">
             <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
               {overdueTasks.length}
             </span>
@@ -247,21 +247,21 @@ export function DashboardClient({
                 )}
               />
             </div>
-            <span className="text-[10px] text-slate-400 mt-1 block">
+            <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-1.5 block">
               {overdueTasks.length === 0 ? 'Fully on track' : 'Requires review'}
             </span>
           </div>
         </div>
 
         {/* 4. Notes */}
-        <div className="glass-card rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden group">
+        <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Notes</span>
-            <div className="h-6 w-6 rounded-full bg-purple-50 dark:bg-purple-950/60 flex items-center justify-center">
-              <FileText className="h-3.5 w-3.5 text-purple-500" />
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 tracking-tight">Notes</span>
+            <div className="h-7 w-7 rounded-full bg-purple-100 dark:bg-purple-950/70 flex items-center justify-center shadow-2xs">
+              <FileText className="h-4 w-4 text-purple-600 dark:text-purple-400" />
             </div>
           </div>
-          <div className="mt-2">
+          <div className="mt-2.5">
             <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
               {stats.notes_created || notes.length}
             </span>
@@ -270,15 +270,15 @@ export function DashboardClient({
             <div className="h-1.5 w-full bg-purple-500/20 rounded-full overflow-hidden">
               <div className="h-full bg-purple-500 rounded-full w-2/3 transition-all duration-500" />
             </div>
-            <span className="text-[10px] text-slate-400 mt-1 block">Active cloud notes</span>
+            <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-1.5 block">Active cloud notes</span>
           </div>
         </div>
       </div>
 
       {/* Middle Row: Today's Tasks, Upcoming Tasks, and Glass 3D-Inspired Bar Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
         {/* Today's Tasks */}
-        <div className="glass-card rounded-3xl p-5 flex flex-col justify-between">
+        <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3.5 border-b border-white/60 dark:border-slate-800/60 pb-2.5">
               <div className="flex items-center gap-2">
@@ -290,23 +290,23 @@ export function DashboardClient({
                   {dueTodayTasks.length}
                 </span>
               </div>
-              <Link href="/tasks?filter=today" className="text-[11px] text-blue-600 hover:underline flex items-center gap-0.5">
+              <Link href="/tasks?filter=today" className="text-xs text-blue-600 hover:underline flex items-center gap-0.5 font-semibold">
                 View all <ChevronRight className="h-3 w-3" />
               </Link>
             </div>
 
             <div className="space-y-2">
               {dueTodayTasks.length === 0 ? (
-                <div className="h-40 flex flex-col items-center justify-center text-center text-xs text-slate-400 border border-dashed rounded-2xl border-slate-200 dark:border-slate-800 p-4">
-                  <CheckCircle2 className="h-7 w-7 text-emerald-500/60 mb-1.5" />
-                  <span>All tasks for today are completed!</span>
+                <div className="h-40 flex flex-col items-center justify-center text-center text-xs text-slate-600 dark:text-slate-400 border border-dashed rounded-2xl border-slate-300/80 dark:border-slate-800 p-4">
+                  <CheckCircle2 className="h-7 w-7 text-emerald-500/80 mb-1.5" />
+                  <span className="font-medium">All tasks for today are completed!</span>
                 </div>
               ) : (
                 dueTodayTasks.slice(0, 4).map((task) => (
                   <div
                     key={task.id}
                     onClick={() => setSelectedTask(task)}
-                    className="flex items-center justify-between p-2.5 rounded-2xl border border-white/60 dark:border-slate-800/60 bg-white/50 dark:bg-slate-900/50 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all cursor-pointer group shadow-2xs"
+                    className="flex items-center justify-between p-2.5 rounded-2xl border border-white/80 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/50 hover:bg-white/95 dark:hover:bg-slate-800/90 transition-all cursor-pointer group shadow-2xs"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div onClick={(e) => handleToggleComplete(task.id, e)} className="cursor-pointer">
@@ -317,15 +317,15 @@ export function DashboardClient({
                           className={cn(
                             "text-xs font-semibold truncate",
                             task.status === 'completed'
-                              ? "line-through text-slate-400"
-                              : "text-slate-800 dark:text-slate-200 group-hover:text-blue-600"
+                              ? "line-through text-slate-500 dark:text-slate-500"
+                              : "text-slate-900 dark:text-slate-100 group-hover:text-blue-600"
                           )}
                         >
                           {task.title}
                         </div>
                         {task.due_time && (
-                          <div className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
-                            <Clock className="h-3 w-3" />
+                          <div className="text-[11px] text-slate-600 dark:text-slate-400 font-medium flex items-center gap-1 mt-0.5">
+                            <Clock className="h-3 w-3 text-blue-500" />
                             <span>{task.due_time}</span>
                           </div>
                         )}
@@ -338,7 +338,7 @@ export function DashboardClient({
                         task.priority === 'urgent' && "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300",
                         task.priority === 'high' && "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300",
                         task.priority === 'medium' && "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300",
-                        task.priority === 'low' && "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                        task.priority === 'low' && "bg-slate-200/80 text-slate-800 dark:bg-slate-800 dark:text-slate-300"
                       )}
                     >
                       {task.priority}
@@ -349,14 +349,14 @@ export function DashboardClient({
             </div>
           </div>
 
-          <div className="pt-3 border-t border-white/60 dark:border-slate-800/60 text-[10px] text-slate-400 flex items-center justify-between mt-2">
+          <div className="pt-3 border-t border-white/60 dark:border-slate-800/60 text-[11px] text-slate-600 dark:text-slate-400 flex items-center justify-between mt-2 font-medium">
             <span>Organized for maximum focus</span>
-            <span className="text-blue-600 font-semibold">Today</span>
+            <span className="text-blue-600 dark:text-blue-400 font-bold">Today</span>
           </div>
         </div>
 
         {/* Upcoming Tasks */}
-        <div className="glass-card rounded-3xl p-5 flex flex-col justify-between">
+        <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3.5 border-b border-white/60 dark:border-slate-800/60 pb-2.5">
               <div className="flex items-center gap-2">
@@ -368,39 +368,39 @@ export function DashboardClient({
                   {upcomingTasks.length}
                 </span>
               </div>
-              <Link href="/tasks?filter=upcoming" className="text-[11px] text-blue-600 hover:underline flex items-center gap-0.5">
+              <Link href="/tasks?filter=upcoming" className="text-xs text-blue-600 hover:underline flex items-center gap-0.5 font-semibold">
                 View all <ChevronRight className="h-3 w-3" />
               </Link>
             </div>
 
             <div className="space-y-2">
               {upcomingTasks.length === 0 ? (
-                <div className="h-40 flex flex-col items-center justify-center text-center text-xs text-slate-400 border border-dashed rounded-2xl border-slate-200 dark:border-slate-800 p-4">
-                  <span>No upcoming tasks scheduled yet.</span>
+                <div className="h-40 flex flex-col items-center justify-center text-center text-xs text-slate-600 dark:text-slate-400 border border-dashed rounded-2xl border-slate-300/80 dark:border-slate-800 p-4">
+                  <span className="font-medium">No upcoming tasks scheduled yet.</span>
                 </div>
               ) : (
                 upcomingTasks.slice(0, 4).map((task) => (
                   <div
                     key={task.id}
                     onClick={() => setSelectedTask(task)}
-                    className="flex items-center justify-between p-2.5 rounded-2xl border border-white/60 dark:border-slate-800/60 bg-white/50 dark:bg-slate-900/50 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all cursor-pointer group shadow-2xs"
+                    className="flex items-center justify-between p-2.5 rounded-2xl border border-white/80 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/50 hover:bg-white/95 dark:hover:bg-slate-800/90 transition-all cursor-pointer group shadow-2xs"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div onClick={(e) => handleToggleComplete(task.id, e)} className="cursor-pointer">
                         <Checkbox checked={task.status === 'completed'} />
                       </div>
                       <div className="truncate">
-                        <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 truncate">
+                        <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 truncate">
                           {task.title}
                         </div>
-                        <div className="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5">
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 font-medium flex items-center gap-2 mt-0.5">
                           <span>{task.due_date}</span>
                           {task.due_time && <span>at {task.due_time}</span>}
                         </div>
                       </div>
                     </div>
 
-                    <span className="text-[9px] px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-300 font-bold uppercase shrink-0">
+                    <span className="text-[9px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold uppercase shrink-0">
                       Reminder
                     </span>
                   </div>
@@ -409,14 +409,14 @@ export function DashboardClient({
             </div>
           </div>
 
-          <div className="pt-3 border-t border-white/60 dark:border-slate-800/60 text-[10px] text-slate-400 flex items-center justify-between mt-2">
+          <div className="pt-3 border-t border-white/60 dark:border-slate-800/60 text-[11px] text-slate-600 dark:text-slate-400 flex items-center justify-between mt-2 font-medium">
             <span>Canonical UTC conversions active</span>
-            <span className="text-indigo-600 font-semibold">Scheduled</span>
+            <span className="text-indigo-600 dark:text-indigo-400 font-bold">Scheduled</span>
           </div>
         </div>
 
         {/* Productivity: Glass 3D-Inspired Bar Chart with Subtle Blue/Cyan Illumination */}
-        <div className="glass-card rounded-3xl p-5 flex flex-col justify-between">
+        <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -425,7 +425,7 @@ export function DashboardClient({
                   Productivity
                 </h3>
               </div>
-              <span className="text-[10px] text-slate-400 font-medium">Weekly Velocity</span>
+              <span className="text-[11px] text-slate-600 dark:text-slate-400 font-semibold">Weekly Velocity</span>
             </div>
 
             <div className="h-44 w-full pt-2">
@@ -441,15 +441,16 @@ export function DashboardClient({
                     </filter>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.12} vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.96)',
                       borderRadius: '16px',
-                      border: '1px solid rgba(226, 232, 240, 0.8)',
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                      border: '1px solid rgba(226, 232, 240, 0.9)',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
                       fontSize: '11px',
+                      color: '#0f172a',
                     }}
                   />
                   <Bar
@@ -464,17 +465,17 @@ export function DashboardClient({
             </div>
           </div>
 
-          <div className="pt-3 border-t border-white/60 dark:border-slate-800/60 text-[10px] text-slate-400 flex items-center justify-between mt-2">
+          <div className="pt-3 border-t border-white/60 dark:border-slate-800/60 text-[11px] text-slate-600 dark:text-slate-400 flex items-center justify-between mt-2 font-medium">
             <span>Glass 3D velocity illumination</span>
-            <span className="text-cyan-600 font-semibold">Active</span>
+            <span className="text-cyan-600 dark:text-cyan-400 font-bold">Active</span>
           </div>
         </div>
       </div>
 
       {/* Bottom Row: Recent Notes, Recent Activity, and Upcoming Reminders (All 5 Sections) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
         {/* Section 1: Recent Notes */}
-        <div className="glass-card rounded-3xl p-5 flex flex-col justify-between">
+        <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3.5 border-b border-white/60 dark:border-slate-800/60 pb-2.5">
               <div className="flex items-center gap-2">
@@ -483,7 +484,7 @@ export function DashboardClient({
                   Recent Notes
                 </h3>
               </div>
-              <Link href="/notes" className="text-[11px] text-blue-600 hover:underline flex items-center gap-0.5">
+              <Link href="/notes" className="text-xs text-blue-600 hover:underline flex items-center gap-0.5 font-semibold">
                 All notes <ChevronRight className="h-3 w-3" />
               </Link>
             </div>
@@ -493,37 +494,37 @@ export function DashboardClient({
                 <Link
                   key={note.id}
                   href={`/notes?id=${note.id}`}
-                  className="block p-3 rounded-2xl border border-white/60 dark:border-slate-800/60 bg-white/50 dark:bg-slate-900/50 hover:bg-white/90 dark:hover:bg-slate-800/90 hover:border-blue-300 transition-all shadow-2xs group"
+                  className="block p-3 rounded-2xl border border-white/70 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/50 hover:bg-white/95 dark:hover:bg-slate-800/90 hover:border-blue-300 transition-all shadow-2xs group"
                 >
                   <div className="flex items-center justify-between">
                     <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 group-hover:text-blue-600 truncate">
                       {note.title || 'Untitled Note'}
                     </div>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
                       {note.folder?.name || 'General'}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 line-clamp-1 mt-1">
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-1 mt-1 font-medium">
                     {note.content_text || 'No preview available'}
                   </p>
                 </Link>
               ))}
               {notes.length === 0 && (
-                <div className="py-8 text-center text-xs text-slate-400 border border-dashed rounded-2xl border-slate-200 dark:border-slate-800">
+                <div className="py-8 text-center text-xs text-slate-600 dark:text-slate-400 border border-dashed rounded-2xl border-slate-300/80 dark:border-slate-800">
                   No notes found. Click &quot;New Note&quot; to begin.
                 </div>
               )}
             </div>
           </div>
 
-          <div className="pt-3 border-t border-white/60 dark:border-slate-800/60 text-[10px] text-slate-400 flex items-center justify-between mt-2">
+          <div className="pt-3 border-t border-white/60 dark:border-slate-800/60 text-[11px] text-slate-600 dark:text-slate-400 flex items-center justify-between mt-2 font-medium">
             <span>Autosave active with version history</span>
-            <span className="text-emerald-600 font-semibold">Ready</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold">Ready</span>
           </div>
         </div>
 
         {/* Section 2: Recent Activity (Live Workspace Timeline) */}
-        <div className="glass-card rounded-3xl p-5 flex flex-col justify-between">
+        <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3.5 border-b border-white/60 dark:border-slate-800/60 pb-2.5">
               <div className="flex items-center gap-2">
@@ -532,42 +533,42 @@ export function DashboardClient({
                   Recent Activity
                 </h3>
               </div>
-              <span className="text-[10px] text-slate-400">Live Workspace Sync</span>
+              <span className="text-[11px] text-slate-600 dark:text-slate-400 font-semibold">Live Workspace Sync</span>
             </div>
 
             <div className="space-y-3">
               {activityLogs.slice(0, 3).map((act) => (
-                <div key={act.id} className="flex items-start gap-3 text-xs p-2 rounded-xl bg-white/40 dark:bg-slate-900/40">
+                <div key={act.id} className="flex items-start gap-3 text-xs p-2.5 rounded-xl bg-white/50 dark:bg-slate-900/50 border border-white/60 dark:border-slate-800/40">
                   <div className="h-7 w-7 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
                     {userName.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-slate-800 dark:text-slate-200 font-semibold truncate">
+                    <div className="text-slate-900 dark:text-slate-100 font-semibold truncate">
                       {act.action}
                     </div>
-                    <div className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1.5">
-                      <Clock className="h-2.5 w-2.5" />
+                    <div className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-0.5 flex items-center gap-1.5">
+                      <Clock className="h-2.5 w-2.5 text-blue-500" />
                       <span suppressHydrationWarning>{new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                   </div>
                 </div>
               ))}
               {activityLogs.length === 0 && (
-                <div className="py-8 text-center text-xs text-slate-400 border border-dashed rounded-2xl border-slate-200 dark:border-slate-800">
+                <div className="py-8 text-center text-xs text-slate-600 dark:text-slate-400 border border-dashed rounded-2xl border-slate-300/80 dark:border-slate-800">
                   No recent activity recorded yet.
                 </div>
               )}
             </div>
           </div>
 
-          <div className="pt-3 border-t border-white/60 dark:border-slate-800/60 text-[10px] text-slate-400 flex items-center justify-between mt-2">
+          <div className="pt-3 border-t border-white/60 dark:border-slate-800/60 text-[11px] text-slate-600 dark:text-slate-400 flex items-center justify-between mt-2 font-medium">
             <span>Immutable activity logs</span>
-            <span className="text-blue-600 font-semibold">Synced</span>
+            <span className="text-blue-600 dark:text-blue-400 font-bold">Synced</span>
           </div>
         </div>
 
         {/* Section 3: Upcoming Reminders (Dedicated Scheduler Status Card) */}
-        <div className="glass-card rounded-3xl p-5 flex flex-col justify-between">
+        <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3.5 border-b border-white/60 dark:border-slate-800/60 pb-2.5">
               <div className="flex items-center gap-2">
@@ -576,7 +577,7 @@ export function DashboardClient({
                   Upcoming Reminders
                 </h3>
               </div>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold uppercase">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold uppercase">
                 Server Ready
               </span>
             </div>
@@ -585,28 +586,28 @@ export function DashboardClient({
               {pendingReminders.slice(0, 3).map((rem) => (
                 <div
                   key={rem.id}
-                  className="p-3 rounded-2xl border border-white/60 dark:border-slate-800/60 bg-white/50 dark:bg-slate-900/50 text-xs shadow-2xs"
+                  className="p-3 rounded-2xl border border-white/70 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/50 text-xs shadow-2xs"
                 >
                   <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">
                     {rem.task?.title || 'Scheduled Task Alert'}
                   </div>
-                  <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1.5">
+                  <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-1.5">
                     <span className="flex items-center gap-1" suppressHydrationWarning>
                       <Clock className="h-3 w-3 text-indigo-500" />
                       {new Date(rem.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({rem.timezone || 'UTC'})
                     </span>
-                    <span className="text-indigo-600 font-bold">Push & Email</span>
+                    <span className="text-indigo-600 dark:text-indigo-400 font-bold">Push & Email</span>
                   </div>
                 </div>
               ))}
 
               {pendingReminders.length === 0 && (
-                <div className="p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200/50 dark:border-indigo-900/50 text-xs text-slate-600 dark:text-slate-300 space-y-1">
+                <div className="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-900/50 text-xs text-slate-700 dark:text-slate-300 space-y-1">
                   <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                     <Zap className="h-3.5 w-3.5 text-indigo-600" />
                     All Reminders Dispatched
                   </div>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
                     When you schedule tasks with reminders, they appear here and deliver server-side.
                   </p>
                 </div>
@@ -614,9 +615,9 @@ export function DashboardClient({
             </div>
           </div>
 
-          <div className="pt-3 border-t border-white/60 dark:border-slate-800/60 text-[10px] text-slate-400 flex items-center justify-between mt-2">
+          <div className="pt-3 border-t border-white/60 dark:border-slate-800/60 text-[11px] text-slate-600 dark:text-slate-400 flex items-center justify-between mt-2 font-medium">
             <span>Runs even when tab is closed</span>
-            <span className="text-indigo-600 font-semibold">Active</span>
+            <span className="text-indigo-600 dark:text-indigo-400 font-bold">Active</span>
           </div>
         </div>
       </div>

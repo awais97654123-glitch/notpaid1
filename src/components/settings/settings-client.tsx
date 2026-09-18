@@ -323,7 +323,7 @@ export function SettingsClient({
             <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
               {user.full_name || 'Alex Morgan'}
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">{user.email}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-0.5">{user.email}</p>
             <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-[10px] font-bold">
               <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
               <span>Clerk Authenticated</span>
@@ -336,19 +336,19 @@ export function SettingsClient({
               <UserIcon className="h-4 w-4" />
               <span>Profile</span>
             </div>
-            <div className="p-2.5 rounded-xl text-slate-600 dark:text-slate-400 flex items-center gap-2">
+            <div className="p-2.5 rounded-xl text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2">
               <Palette className="h-4 w-4" />
               <span>Appearance</span>
             </div>
-            <div className="p-2.5 rounded-xl text-slate-600 dark:text-slate-400 flex items-center gap-2">
+            <div className="p-2.5 rounded-xl text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2">
               <Bell className="h-4 w-4" />
               <span>Notifications</span>
             </div>
-            <div className="p-2.5 rounded-xl text-slate-600 dark:text-slate-400 flex items-center gap-2">
+            <div className="p-2.5 rounded-xl text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2">
               <Clock className="h-4 w-4" />
               <span>Timezone</span>
             </div>
-            <div className="p-2.5 rounded-xl text-slate-600 dark:text-slate-400 flex items-center gap-2">
+            <div className="p-2.5 rounded-xl text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2">
               <Globe className="h-4 w-4" />
               <span>Language</span>
             </div>
@@ -358,82 +358,89 @@ export function SettingsClient({
         {/* Right 2 Columns: Controls Panel */}
         <div className="lg:col-span-2 space-y-5">
           {/* Appearance Section (Spec #19: Light [Default], Dark, System) */}
-          <div className="glass-panel rounded-3xl p-5 sm:p-6 space-y-3">
-            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Palette className="h-4 w-4 text-blue-600" />
-              Appearance
-            </h3>
-            <div className="grid grid-cols-3 gap-3 pt-1">
+          <div className="glass-panel rounded-3xl p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-white/60 dark:border-slate-800/60 pb-3">
+              <div className="flex items-center gap-2">
+                <Palette className="h-4 w-4 text-blue-600" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  Appearance
+                </h3>
+              </div>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold uppercase">
+                Liquid Glass
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
               <button
                 type="button"
                 onClick={() => setTheme('light')}
                 className={cn(
-                  "p-3 rounded-2xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer",
+                  "p-3 rounded-2xl border text-xs font-semibold flex flex-col items-center gap-2 cursor-pointer transition-all",
                   theme === 'light'
                     ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20"
-                    : "glass-card text-slate-700 dark:text-slate-300 hover:bg-white"
+                    : "glass-card text-slate-700 dark:text-slate-300 hover:border-blue-400"
                 )}
               >
-                <Sun className="h-4 w-4" />
-                <span>Light</span>
+                <Sun className="h-5 w-5" />
+                <span>Light (Default)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setTheme('dark')}
                 className={cn(
-                  "p-3 rounded-2xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer",
+                  "p-3 rounded-2xl border text-xs font-semibold flex flex-col items-center gap-2 cursor-pointer transition-all",
                   theme === 'dark'
                     ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20"
-                    : "glass-card text-slate-700 dark:text-slate-300 hover:bg-white"
+                    : "glass-card text-slate-700 dark:text-slate-300 hover:border-blue-400"
                 )}
               >
-                <Moon className="h-4 w-4" />
-                <span>Dark</span>
+                <Moon className="h-5 w-5" />
+                <span>Dark Mode</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setTheme('system')}
                 className={cn(
-                  "p-3 rounded-2xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer",
+                  "p-3 rounded-2xl border text-xs font-semibold flex flex-col items-center gap-2 cursor-pointer transition-all",
                   theme === 'system'
                     ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20"
-                    : "glass-card text-slate-700 dark:text-slate-300 hover:bg-white"
+                    : "glass-card text-slate-700 dark:text-slate-300 hover:border-blue-400"
                 )}
               >
-                <Laptop className="h-4 w-4" />
-                <span>System</span>
+                <Laptop className="h-5 w-5" />
+                <span>System Auto</span>
               </button>
             </div>
           </div>
 
-          {/* Notifications Section (Exact User Spec) */}
+          {/* Notifications & Background Reminders Preferences (Spec #19, #28) */}
           <div className="glass-panel rounded-3xl p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-white/60 dark:border-slate-800/60 pb-3">
               <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4 text-indigo-600" />
                 <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-                  Notification Settings
+                  Background Reminder Channels
                 </h3>
               </div>
-              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold uppercase tracking-wider">
-                Server-Side Background Active
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold uppercase">
+                Server-Side
               </span>
             </div>
 
-            {/* Notification Toggles with Explicit [ ON ] / [ OFF ] states */}
             <div className="space-y-3">
-              {/* 1. Push Notifications */}
+              {/* 1. Browser Push Notifications */}
               <div className="flex items-center justify-between p-3.5 rounded-2xl glass-card">
                 <div>
                   <div className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     <span>Push Notifications</span>
-                    <span className="text-[10px] font-normal px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-300">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">
                       Native Web Push
                     </span>
                   </div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">
+                  <div className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">
                     Delivers alarms even when TaskPad tab or browser is closed
                   </div>
                 </div>
@@ -457,7 +464,7 @@ export function SettingsClient({
                   <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
                     Email Notifications
                   </div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">
+                  <div className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">
                     Send task reminder emails to {user.email}
                   </div>
                 </div>
@@ -481,7 +488,7 @@ export function SettingsClient({
                   <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
                     Task Reminders
                   </div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">
+                  <div className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">
                     Trigger background alarms for scheduled tasks at due time
                   </div>
                 </div>
@@ -569,57 +576,57 @@ export function SettingsClient({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
               {/* 1. Push Permission */}
               <div className="p-3.5 rounded-2xl glass-card space-y-1">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold">Push permission</span>
-                <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <span className="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-bold">Push permission</span>
+                <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                   <span className={cn(
                     "h-2 w-2 rounded-full",
                     permissionState === 'granted' ? "bg-emerald-500" : permissionState === 'denied' ? "bg-rose-500" : "bg-amber-500"
                   )} />
                   <span className="capitalize">{permissionState}</span>
                 </div>
-                <div className="text-[10px] text-slate-400">
+                <div className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
                   Browser notification privilege
                 </div>
               </div>
 
               {/* 2. Service Worker Status */}
               <div className="p-3.5 rounded-2xl glass-card space-y-1">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold">Service Worker status</span>
+                <span className="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-bold">Service Worker status</span>
                 <div className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   <span className="truncate">{swStatus}</span>
                 </div>
-                <div className="text-[10px] text-slate-400">
+                <div className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
                   PWA & background push receiver
                 </div>
               </div>
 
               {/* 3. Push Subscription Status */}
               <div className="p-3.5 rounded-2xl glass-card space-y-1">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold">Push subscription status</span>
+                <span className="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-bold">Push subscription status</span>
                 <div className="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
                   <Radio className="h-3.5 w-3.5" />
                   <span>{pushSubscribed ? 'Subscribed (Active)' : 'Not Subscribed'}</span>
                 </div>
-                <div className="text-[10px] text-slate-400 truncate">
+                <div className="text-[11px] text-slate-600 dark:text-slate-400 font-medium truncate">
                   {diagnostics?.activeEndpoint || 'No device key linked'}
                 </div>
               </div>
 
               {/* 4. Last Successful Push */}
               <div className="p-3.5 rounded-2xl glass-card space-y-1">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold">Last successful push</span>
-                <div className="font-bold text-slate-800 dark:text-slate-200 truncate">
+                <span className="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-bold">Last successful push</span>
+                <div className="font-bold text-slate-900 dark:text-slate-100 truncate">
                   {diagnostics?.lastSuccessfulPush || 'Awaiting trigger'}
                 </div>
-                <div className="text-[10px] text-slate-400">
+                <div className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
                   Native VAPID push delivery
                 </div>
               </div>
 
               {/* 5. Last Failed Push */}
               <div className="p-3.5 rounded-2xl glass-card space-y-1">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold">Last failed push</span>
+                <span className="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-bold">Last failed push</span>
                 <div className={cn(
                   "font-bold truncate",
                   diagnostics?.lastFailedPush && diagnostics.lastFailedPush !== 'None'
@@ -628,18 +635,18 @@ export function SettingsClient({
                 )}>
                   {diagnostics?.lastFailedPush || 'None'}
                 </div>
-                <div className="text-[10px] text-slate-400">
+                <div className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
                   Zero delivery exceptions
                 </div>
               </div>
 
               {/* 6. Last Scheduler Run */}
               <div className="p-3.5 rounded-2xl glass-card space-y-1">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold">Last scheduler run</span>
-                <div className="font-bold text-slate-800 dark:text-slate-200 truncate">
+                <span className="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-bold">Last scheduler run</span>
+                <div className="font-bold text-slate-900 dark:text-slate-100 truncate">
                   {diagnostics?.lastSchedulerRun || 'Every 60s (pg_cron / Edge)'}
                 </div>
-                <div className="text-[10px] text-slate-400">
+                <div className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
                   Automatic background sweep
                 </div>
               </div>
@@ -648,14 +655,14 @@ export function SettingsClient({
             {/* 7. Last Reminder Processed Card */}
             <div className="p-4 rounded-2xl glass-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
               <div>
-                <span className="text-[10px] text-slate-400 uppercase font-semibold">Last reminder processed</span>
+                <span className="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-bold">Last reminder processed</span>
                 <div className="font-bold text-slate-900 dark:text-slate-100 text-sm mt-0.5 flex items-center gap-2">
                   <span>{diagnostics?.lastReminderProcessed?.taskTitle || 'Complete assignment'}</span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 uppercase">
                     {diagnostics?.lastReminderProcessed?.status || 'sent'}
                   </span>
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
+                <div className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">
                   Scheduled UTC: {diagnostics?.lastReminderProcessed?.scheduledAt ? new Date(diagnostics.lastReminderProcessed.scheduledAt).toLocaleTimeString() : 'Recent'} • Idempotency Claimed
                 </div>
               </div>
